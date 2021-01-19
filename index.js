@@ -77,6 +77,11 @@ app.listen(5000, () => {
 });
 
 
+app.get('/', (req,res)=>{
+    res.send({"message" : "welcome to puskesmas mantap anjay mabar"})
+})
+
+
 app.post('/loginuser', (req, res) => {
     // receive from body
     // const {username , password } = req.body 
