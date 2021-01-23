@@ -4,11 +4,11 @@ import bodyParser from 'body-parser'
 import dotenv from 'dotenv';
 import multer from 'multer'
 
-import {getBooks} from './db.js'
+import { getBooks } from './db.js'
 dotenv.config()
 // get access token secret from env file 
 const accessTokenSecret = process.env.ACCESSTOKENSECRET
-const user = {username : "hashrul" , password : "hashrul"}
+const user = { username: "hashrul", password: "hashrul" }
 
 
 
@@ -77,13 +77,13 @@ app.listen(process.env.PORT || 5000, () => {
 });
 
 // // for production / hosting
-// app.listen( 5000, () => {
+// app.listen(5000, () => {
 //     console.log("Server running on port 5000 !");
 // });
 
 
-app.get('/', (req,res)=>{
-    res.send({"message" : "welcome to puskesmas mantap anjay mabar"})
+app.get('/', (req, res) => {
+    res.send({ "message": "welcome to puskesmas mantap anjay mabar" })
 })
 
 
@@ -101,7 +101,7 @@ app.post('/loginuser', (req, res) => {
     // get the accessToken secret 
 
     if (username === "hashrul" && password === "hashrul") {
-        const accessToken = jwt.sign(user, accessTokenSecret, {expiresIn: '30m'})
+        const accessToken = jwt.sign(user, accessTokenSecret, { expiresIn: '30m' })
 
         res.json({ token: accessToken, username: "hashrul" })
     } else {
@@ -123,11 +123,11 @@ app.get('/reports', authenticateJWT, (req, res) => {
 })
 
 // example for  single file upload 
-app.post('/image/single', upload.array('photos' , 2), function(req,res){
-    console.log(req.files[0]) 
+app.post('/image/single', upload.array('photos', 2), function (req, res) {
+    console.log(req.files[0])
 
 
-    console.log(req.files[1]) 
+    console.log(req.files[1])
 
     console.log(req.body.name)
 
@@ -136,18 +136,28 @@ app.post('/image/single', upload.array('photos' , 2), function(req,res){
 
 
 // example for getting data from database 
-app.get('/books' , (req,res)=>{
-    getBooks().then((result)=>{
+app.get('/books', (req, res) => {
+    getBooks().then((result) => {
 
         console.log(result)
         res.json({
-            statuscode  : 200,
-            data : result, 
-             
+            statuscode: 200,
+            data: result,
+
         })
-    }).catch((err)=>{
+    }).catch((err) => {
         res.status(403).send(err)
     })
 })
 
+
+app.get('/credential', (req, res) => {
+    res.json({
+        'database': process.env.DATABASE,
+        'host': process.env.HOST,
+        'user': process.env.USER,
+        'port': process.env.PORT,
+        'password': process.env.PASSWORD
+    })
+})
 
