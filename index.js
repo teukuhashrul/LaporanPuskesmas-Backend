@@ -4,7 +4,7 @@ import bodyParser from 'body-parser'
 import dotenv from 'dotenv';
 import multer from 'multer'
 
-
+import {getBooks} from './db.js'
 dotenv.config()
 // get access token secret from env file 
 const accessTokenSecret = process.env.ACCESSTOKENSECRET
@@ -127,6 +127,20 @@ app.post('/image/single', upload.array('photos' , 2), function(req,res){
     console.log(req.body.name)
 
     res.send("bisaaaa")
+})
+
+
+// example for getting data from database 
+app.get('/books' , (req,res)=>{
+    getBooks().then((res)=>{
+        res.send({
+            statuscode  : 200,
+            data : res.rows , 
+             
+        })
+    }).catch((err)=>{
+        res.status(403).send(err)
+    })
 })
 
 
