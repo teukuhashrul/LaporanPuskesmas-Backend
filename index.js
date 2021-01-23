@@ -71,10 +71,15 @@ app.use(function (request, response, next) {
 });
 
 
-
+// for local testing
 app.listen(process.env.PORT || 5000, () => {
-    console.log("Server running on port 5000");
+    console.log("Server running on port 5000 !");
 });
+
+// // for production / hosting
+// app.listen( 5000, () => {
+//     console.log("Server running on port 5000 !");
+// });
 
 
 app.get('/', (req,res)=>{
@@ -132,10 +137,12 @@ app.post('/image/single', upload.array('photos' , 2), function(req,res){
 
 // example for getting data from database 
 app.get('/books' , (req,res)=>{
-    getBooks().then((res)=>{
-        res.send({
+    getBooks().then((result)=>{
+
+        console.log(result)
+        res.json({
             statuscode  : 200,
-            data : res.rows , 
+            data : result, 
              
         })
     }).catch((err)=>{
