@@ -2,19 +2,20 @@ import pg from 'pg'
 import dotenv from 'dotenv'
 dotenv.config()
 
-// const db = new pg.Pool({
-//     user: process.env.USER,
-//     host: process.env.HOST,
-//     database: process.env.DATABASE,
-//     password: process.env.PASSWORD,
-//     port: process.env.PORT,
-//     ssl: { rejectUnauthorized: false }
-// })
 
+// USE THIS FOR LOCAL CONNECTION TO HOST 
+const db = new pg.Pool({
+    user: process.env.USER,
+    host: process.env.HOST,
+    database: process.env.DATABASE,
+    password: process.env.PASSWORD,
+    port: process.env.PORT,
+    ssl: { rejectUnauthorized: false }
+})
 
-const connectionString = process.env.DATABASE_URI
-
-const db = new pg.Pool({ connectionString , ssl: { rejectUnauthorized: false }})
+// USE THIS FOR REMOTE CONNECTION IN HOSTING
+// const connectionString = process.env.DATABASE_URI
+// const db = new pg.Pool({ connectionString , ssl: { rejectUnauthorized: false }})
 
 /**
  * get all books
@@ -36,6 +37,6 @@ let getBooks = () => {
 export { getBooks }
 
 
-getBooks().then((result) => {
-    console.log(result)
-})
+// getBooks().then((result) => {
+//     console.log(result)
+// })

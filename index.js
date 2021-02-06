@@ -5,10 +5,10 @@ import dotenv from 'dotenv';
 import multer from 'multer'
 
 import { getBooks } from './db.js'
+import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 dotenv.config()
 // get access token secret from env file 
 const accessTokenSecret = process.env.ACCESSTOKENSECRET
-const user = { username: "hashrul", password: "hashrul" }
 
 
 
@@ -46,18 +46,23 @@ const authenticateJWT = (req, res, next) => {
     if (authHeader) {
         const token = authHeader.split(' ')[1];
 
-        jwt.verify(token, accessTokenSecret, (err, user) => {
+        jwt.verify(token, accessTokenSecret, (err) => {
             if (err) {
                 // console.log(err)
-                return res.sendStatus(403)
+                return res.sendStatus(401).json({
+                    statuscode : 401 ,
+                    message : "Unauthorized Request, please provide with a valid Token"
+                })
             }
 
-            req.user = user;
             next();
 
         });
     } else {
-        res.sendStatus(403)
+        res.status(406).json({
+            statuscode : 406,
+            message : 'Token data in Authorization Header not included'
+        })
     }
 }
 
@@ -71,15 +76,15 @@ app.use(function (request, response, next) {
 });
 
 
-// for local testing
-app.listen(process.env.PORT || 5000, () => {
-    console.log("Server running on port 5000 !");
-});
-
-// // for production / hosting
-// app.listen(5000, () => {
+// for production
+// app.listen(process.env.PORT || 5000, () => {
 //     console.log("Server running on port 5000 !");
 // });
+
+// // for local testing 
+app.listen(5000, () => {
+    console.log("Server running on port 5000 !");
+});
 
 
 app.get('/', (req, res) => {
@@ -100,18 +105,40 @@ app.post('/loginuser', (req, res) => {
 
     // get the accessToken secret 
 
-    if (username === "hashrul" && password === "hashrul") {
-        const accessToken = jwt.sign(user, accessTokenSecret, { expiresIn: '30m' })
+    if (username && password) {
+        loginUser(username, password).then((result) => {
+            if (result.length > 0) {
+                const userData = result[0]
+                const accessToken = jwt.sign(userData, accessTokenSecret, { expiresIn: '30m' })
 
-        res.json({ token: accessToken, username: "hashrul" })
-    } else {
-        res.status(403).send({
-            error:
-            {
-                statuscode: 403,
-                message: "wrong username / password "
+                res.json({
+                    statuscode : 200 , 
+                    token : accessToken ,
+                    id : userData.id ,
+                    username : userData.username
+                })
+
+            } else {
+                res.status(401).json({
+                    statuscode : 401,
+                    message : "Wrong username / Password. "
+                })
+
             }
+        })
+    } else {
+        let errorMessage = ''
+        if(!username && !password){
+            errorMessage= 'Please provide Both username and password in the body Request'
+        }else if(!username){
+            errorMessage = 'Please provide username in the body Request'
+        }else{
+            errorMessage= 'Please provide password in the body Request'
+        }
 
+        res.status(406).json({
+            statuscode : 406 , 
+            messsage : errorMessage
         })
     }
 
@@ -161,3 +188,74 @@ app.get('/credential', (req, res) => {
     })
 })
 
+
+// get all users 
+app.get('/users', (req, res) => {
+    getAllUsers().then((result) => {
+
+        res.json({
+            statuscode: 200,
+            data: result
+        })
+    })
+})
+
+
+// get User By Id Detail 
+app.get('/user', (req, res) => {
+    let id = req.query.id
+
+    if (id) {
+        getUserById(id).then((result) => {
+
+            if (result.length > 0) {
+                res.json({
+                    statuscode: 200,
+                    data: result[0]
+                })
+            } else {
+                res.status(404).json({
+                    statuscode: 404,
+                    message: `User for id ${id} not found, please provide an available User id`
+                })
+            }
+        })
+    } else {
+
+        res.status(406).json({
+            statuscode: 406,
+            message: "Parameter Id is not included, please provide an User id"
+        })
+
+    }
+})
+
+
+// Delete user By Id 
+app.delete('/user', (req, res) => {
+    let id = req.query.id
+
+    if (id) {
+        deleteUserById(id).then((result) => {
+            if (result.rowCount > 0) {
+                res.json({
+                    statuscode: 200,
+                    message: `Successfully deleted data for id  ${id}`
+                })
+            } else {
+                res.status(404).json({
+                    statuscode: 404,
+                    message: `User for id ${id} not found, please provide an available User Id`
+                })
+            }
+        }).catch((err) => {
+
+        })
+
+    } else {
+        res.status(406).json({
+            statuscode: 406,
+            message: "Parameter Id is not included, please provide an User id"
+        })
+    }
+})
