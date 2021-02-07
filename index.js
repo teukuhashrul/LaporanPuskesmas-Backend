@@ -3,9 +3,11 @@ import jwt from 'jsonwebtoken'
 import bodyParser from 'body-parser'
 import dotenv from 'dotenv';
 import multer from 'multer'
-
 import { getBooks } from './db.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
+import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
+
+
 dotenv.config()
 // get access token secret from env file 
 const accessTokenSecret = process.env.ACCESSTOKENSECRET
@@ -50,8 +52,8 @@ const authenticateJWT = (req, res, next) => {
             if (err) {
                 // console.log(err)
                 return res.sendStatus(401).json({
-                    statuscode : 401 ,
-                    message : "Unauthorized Request, please provide with a valid Token"
+                    statuscode: 401,
+                    message: "Unauthorized Request, please provide with a valid Token"
                 })
             }
 
@@ -60,8 +62,8 @@ const authenticateJWT = (req, res, next) => {
         });
     } else {
         res.status(406).json({
-            statuscode : 406,
-            message : 'Token data in Authorization Header not included'
+            statuscode: 406,
+            message: 'Token data in Authorization Header not included'
         })
     }
 }
@@ -77,14 +79,14 @@ app.use(function (request, response, next) {
 
 
 // for production
-// app.listen(process.env.PORT || 5000, () => {
-//     console.log("Server running on port 5000 !");
-// });
+app.listen(process.env.PORT || 5000, () => {
+    console.log("Server running on port  !");
+});
 
 // // for local testing 
-app.listen(5000, () => {
-    console.log("Server running on port 5000 !");
-});
+// app.listen(5000, () => {
+//     console.log("Server running on port 5000 !");
+// });
 
 
 app.get('/', (req, res) => {
@@ -112,33 +114,33 @@ app.post('/loginuser', (req, res) => {
                 const accessToken = jwt.sign(userData, accessTokenSecret, { expiresIn: '30m' })
 
                 res.json({
-                    statuscode : 200 , 
-                    token : accessToken ,
-                    id : userData.id ,
-                    username : userData.username
+                    statuscode: 200,
+                    token: accessToken,
+                    id: userData.id,
+                    username: userData.username
                 })
 
             } else {
                 res.status(401).json({
-                    statuscode : 401,
-                    message : "Wrong username / Password. "
+                    statuscode: 401,
+                    message: "Wrong username / Password. "
                 })
 
             }
         })
     } else {
         let errorMessage = ''
-        if(!username && !password){
-            errorMessage= 'Please provide Both username and password in the body Request'
-        }else if(!username){
+        if (!username && !password) {
+            errorMessage = 'Please provide Both username and password in the body Request'
+        } else if (!username) {
             errorMessage = 'Please provide username in the body Request'
-        }else{
-            errorMessage= 'Please provide password in the body Request'
+        } else {
+            errorMessage = 'Please provide password in the body Request'
         }
 
         res.status(406).json({
-            statuscode : 406 , 
-            messsage : errorMessage
+            statuscode: 406,
+            messsage: errorMessage
         })
     }
 
@@ -214,8 +216,8 @@ app.get('/user', (req, res) => {
                     data: result[0]
                 })
             } else {
-                res.status(404).json({
-                    statuscode: 404,
+                res.status(422).json({
+                    statuscode: 422,
                     message: `User for id ${id} not found, please provide an available User id`
                 })
             }
@@ -243,8 +245,8 @@ app.delete('/user', (req, res) => {
                     message: `Successfully deleted data for id  ${id}`
                 })
             } else {
-                res.status(404).json({
-                    statuscode: 404,
+                res.status(422).json({
+                    statuscode: 422,
                     message: `User for id ${id} not found, please provide an available User Id`
                 })
             }
@@ -256,6 +258,107 @@ app.delete('/user', (req, res) => {
         res.status(406).json({
             statuscode: 406,
             message: "Parameter Id is not included, please provide an User id"
+        })
+    }
+})
+
+// create pencatatan 
+app.post('/createpencatatan', (req, res) => {
+
+    const user_id = req.body.user_id
+    const form = req.body.form
+
+
+    if (user_id && form) {
+        createPencatatan(user_id, form).then((result) => {
+            res.json({
+                statuscode: 200,
+                message: result
+            })
+        }).catch((err) => {
+            res.status(422).json({
+                statuscode: 422,
+                message: err
+            })
+        })
+
+    } else {
+        let errorMessage = ''
+        if (!user_id && !form) {
+            errorMessage = 'User id and form data is missing from the body param, please provide a valid body param'
+        } else if (!user_id) {
+            errorMessage = 'User id is missing from the body param, please provide a valid body param'
+        } else {
+            errorMessage = 'form data is missing from the body param, please provide a valid body param'
+        }
+
+        res.status(406).json({
+            statuscode: 406,
+            message: errorMessage
+        })
+    }
+})
+
+// get all pencatatan
+app.get('/getallpencatatan', (req, res) => {
+    const user_id = req.query.user_id
+
+    getAllPencatatan(user_id).then((result) => {
+        res.json({
+            statuscode: 200,
+            data: result
+        })
+    }).catch((err) => {
+        res.status(422).json({
+            statuscode: 422,
+            message: err
+        })
+    })
+})
+
+// get pencatatan by id 
+app.get('/getpencatatanbyid', (req, res) => {
+    const id = req.query.id
+
+    getPencatatanById(id).then((result) => {
+        res.json({
+            statuscode: 200,
+            data: result
+        })
+    }).catch((err) => {
+        res.status(406).json({
+            statuscode: 406,
+            message: err
+        })
+    })
+})
+
+
+//  delete pencatatan by id 
+app.delete('/pencatatan', (req, res) => {
+    let id = req.query.id
+
+    if (id) {
+        deletePencatatanById(id).then((result) => {
+            if (result.rowCount > 0) {
+                res.json({
+                    statuscode: 200,
+                    message: `Successfully deleted data pencatatan for id  ${id}`
+                })
+            } else {
+                res.status(422).json({
+                    statuscode: 422,
+                    message: `User for id ${id} not found, please provide an available Pencatatan Id`
+                })
+            }
+        }).catch((err)=>{
+
+        })
+
+    } else {
+        res.status(406).json({
+            statuscode: 406,
+            message: "Parameter Id is not included, please provide an Pencatatan id"
         })
     }
 })

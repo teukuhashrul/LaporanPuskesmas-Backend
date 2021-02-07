@@ -4,18 +4,18 @@ dotenv.config()
 
 
 // USE THIS FOR LOCAL CONNECTION TO HOST 
-const db = new pg.Pool({
-    user: process.env.USER,
-    host: process.env.HOST,
-    database: process.env.DATABASE,
-    password: process.env.PASSWORD,
-    port: process.env.PORT,
-    ssl: { rejectUnauthorized: false }
-})
+// const db = new pg.Pool({
+//     user: process.env.USER,
+//     host: process.env.HOST,
+//     database: process.env.DATABASE,
+//     password: process.env.PASSWORD,
+//     port: process.env.PORT,
+//     ssl: { rejectUnauthorized: false }
+// })
 
 // USE THIS FOR REMOTE CONNECTION IN HOSTING
-// const connectionString = process.env.DATABASE_URI
-// const db = new pg.Pool({ connectionString , ssl: { rejectUnauthorized: false }})
+const connectionString = process.env.DATABASE_URI
+const db = new pg.Pool({ connectionString , ssl: { rejectUnauthorized: false }})
 
 /**
  * get all books
@@ -26,6 +26,7 @@ let getBooks = () => {
 
     return new Promise(function (resolve, reject) {
         db.query(query).then((res) => {
+
             resolve(res.rows)
         }).catch((err) => {
             reject(err)
@@ -34,7 +35,7 @@ let getBooks = () => {
 }
 
 
-export { getBooks }
+export { getBooks,db }
 
 
 // getBooks().then((result) => {
