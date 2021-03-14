@@ -6,8 +6,8 @@ import multer from 'multer'
 import { getBooks } from './db.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
-
-
+import { createLaporan, assignLaporanToUser ,getAllLaporan ,getAllLaporanAssignedToUser, submitLaporan} from './laporan.js'
+import {getAllDeskripsiSingkat} from './deskripsi_singkat.js'
 dotenv.config()
 // get access token secret from env file 
 const accessTokenSecret = process.env.ACCESSTOKENSECRET
@@ -79,14 +79,14 @@ app.use(function (request, response, next) {
 
 
 // for production
-app.listen(process.env.PORT || 5000, () => {
-    console.log("Server running on port  !");
-});
+// app.listen(process.env.PORT || 5000, () => {
+//     console.log("Server running on port  !");
+// });
 
 // // for local testing 
-// app.listen(5000, () => {
-//     console.log("Server running on port 5000 !");
-// });
+app.listen(5000, () => {
+    console.log("Server running on port 5000 !");
+});
 
 
 app.get('/', (req, res) => {
@@ -351,7 +351,7 @@ app.delete('/pencatatan', (req, res) => {
                     message: `User for id ${id} not found, please provide an available Pencatatan Id`
                 })
             }
-        }).catch((err)=>{
+        }).catch((err) => {
 
         })
 
@@ -362,3 +362,243 @@ app.delete('/pencatatan', (req, res) => {
         })
     }
 })
+
+
+// create laporan
+app.post('/createlaporan', (req, res) => {
+    const alamat = req.body.alamat;
+    const latitude = req.body.latitude;
+    const longitude = req.body.longitude;
+    const nama_terlapor = req.body.nama_terlapor;
+    const id_status = req.body.id_status;
+
+    let missingBody = [];
+
+    if (!alamat) missingBody.push("alamat");
+    if (!latitude) missingBody.push("latitude");
+    if (!longitude) missingBody.push("longitude");
+    if (!nama_terlapor) missingBody.push("nama_terlapor");
+    if (!id_status) missingBody.push("id_status");
+
+    if (missingBody.length > 0) {
+        let message = '';
+        missingBody.map((element, index) => {
+            if (index == 0) {
+                message += `${element} `;
+            } else if (index == missingBody.length - 1) {
+                message += `and ${element}`;
+            } else {
+                message += `,${element} `;
+            }
+        })
+
+        message += ' param is missing from the request, please send enough body param';
+
+        res.status(406).json({
+            statuscode: 406,
+            message: message
+        })
+
+    } else {
+        if (isNaN(latitude) || isNaN(longitude) || isNaN(id_status)) {
+            res.status(406).json({
+                statuscode: 406,
+                message: "Please input valid number data type "
+            })
+            return
+        }
+
+
+        createLaporan(alamat, latitude, longitude, nama_terlapor, id_status).then((newLaporan) => {
+            res.json({
+                statuscode: 200,
+                message: newLaporan
+            })
+        }).catch((err) => {
+            res.status(422).json({
+                statuscode: 422,
+                message: err
+            })
+        })
+    }
+
+})
+
+
+// assign laporan to user
+app.post('/assign_laporan_to_user', (req, res) => {
+    const id_user = req.body.id_user;
+    const id_laporan = req.body.id_laporan;
+
+    let missingBody = [];
+    if (!id_user) missingBody.push("id_user");
+    if (!id_laporan) missingBody.push("id_laporan");
+
+
+    if (missingBody.length > 0) {
+        let message = '';
+        missingBody.map((element, index) => {
+            if (index == 0) {
+                message += `${element} `;
+            } else if (index == missingBody.length - 1) {
+                message += `and ${element}`;
+            } else {
+                message += `,${element} `;
+            }
+        })
+
+        message += ' param is missing from the request, please send enough body param';
+
+        res.status(406).json({
+            statuscode: 406,
+            message: message
+        })
+
+    } else {
+
+        if (isNaN(id_user) || isNaN(id_laporan) ) {
+            res.status(406).json({
+                statuscode: 406,
+                message: "Please input valid number data type "
+            })
+            return
+        }
+
+
+        assignLaporanToUser(id_laporan,id_user, 1).then((assignResult)=>{
+            res.json({
+                statuscode : 200,
+                message : assignResult
+            })
+        }).catch((errResult)=>{
+            console.log(errResult);
+            res.status(422).json({
+                statuscode : 422,
+                message  :  errResult
+            })
+        })
+    }
+
+
+
+})
+
+
+
+// get all laporan 
+app.get('/get_all_laporan' , (req,res)=>{
+    const id_status = req.query.id_status 
+
+
+    getAllLaporan(id_status).then((result)=>{
+        res.json({
+            statuscode : 200,
+            data : result
+        })
+    }).catch((error)=>{
+        res.status(422).json({
+            statuscode : 422,
+            message : error
+        })
+    })
+
+
+})
+
+// get all laporan assigned to user 
+app.get('/get_all_laporan_assigned_to_user' , (req,res)=>{
+
+    const id_status = req.query.id_status 
+    const id_user = req.query.id_user 
+
+    
+    getAllLaporanAssignedToUser(id_status, id_user).then((result)=>{
+        res.json({
+            statuscode : 200,
+            data : result
+        })
+    }).catch((error)=>{
+        res.status(422).json({
+            statuscode : 422,
+            message : error
+        })
+    })
+    
+})
+
+// get all deskripsi singkat 
+app.get('/get_deskripsi_singkat' , (req,res)=>{
+    getAllDeskripsiSingkat().then((resultQuery)=>{
+        res.json({
+            statuscode : 200, 
+            data : resultQuery
+        })
+    }).catch((err)=>{
+        res.status(422).json({
+            statuscode : 422,
+            message : err
+        })
+    })
+})
+
+// submit laporan
+app.post('/submit_laporan' , (req,res)=>{
+    let arr_of_foto = req.body.arr_of_foto 
+    let arr_of_deskripsi_singkat_id = req.body.arr_of_deskripsi_singkat_id
+    const catatan = req.body.catatan
+    const id_laporan = req.body.id_laporan
+
+    let missingParamArr = [] 
+
+    if(!id_laporan) missingParamArr.push("id_laporan") 
+    if(!arr_of_foto) missingParamArr.push("arr_of_foto")
+    if(!arr_of_deskripsi_singkat_id) missingParamArr.push("arr_of_deskripsi_singkat_id")
+
+    let errMissingParamMessage = 'Param : '
+    if(missingParamArr.length > 0){
+        missingParamArr.map((element, index) =>{
+            if(index ==0){
+                errMissingParamMessage += ` ${element}`
+            }else {
+                errMissingParamMessage += ` ,${element} `
+
+            }
+        })
+        errMissingParamMessage += ` is missing from body param , please provide valid param`
+        res.status(406).json({
+            statuscode : 406,
+            message : errMissingParamMessage
+        })
+        return
+    }
+
+
+
+    if(!Array.isArray(arr_of_foto)){
+        let temp = arr_of_foto
+        arr_of_foto = [temp]
+    }
+
+    if(!Array.isArray(arr_of_deskripsi_singkat_id)){
+        let temp = arr_of_deskripsi_singkat_id
+        arr_of_deskripsi_singkat_id = [temp]
+
+    }
+
+    submitLaporan(arr_of_foto,arr_of_deskripsi_singkat_id , id_laporan , catatan).then((submitResult)=>{
+        res.json({
+            statuscode : 200 ,
+            message    : submitResult
+        })
+        
+    }).catch((errSubmit)=>{
+        res.status(422).json({
+            statuscode : 422,
+            message  :  errSubmit
+        })
+    })
+
+
+
+})
+

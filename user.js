@@ -7,7 +7,7 @@ import {db} from './db.js'
  * 
  */
 let getAllUsers = () => {
-    let query = `select id , username from public."user" `
+    let query = `select id , username, nama , id_puskesmas from public."user" where enabled = true `
 
 
     return new Promise(function (resolve, reject) {
@@ -26,7 +26,7 @@ let getAllUsers = () => {
  * @param {user id} id 
  */
 let getUserById = (id) => {
-    let query = `select id,username from public."user" where id=${id}`
+    let query = `select id , username, nama , id_puskesmas from public."user" where id=${id}`
 
     return new Promise(function (resolve, reject) {
         db.query(query).then((res) => {
