@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 
-// USE THIS FOR LOCAL CONNECTION TO HOST 
+// USE THIS FOR LOCAL CONNECTION TO HOST / testing local
 // const db = new pg.Pool({
 //     user: process.env.USER,
 //     host: process.env.HOST,
@@ -13,7 +13,7 @@ dotenv.config()
 //     ssl: { rejectUnauthorized: false }
 // })
 
-// USE THIS FOR REMOTE CONNECTION IN HOSTING
+// USE THIS FOR REMOTE CONNECTION IN HOSTING / deploy phase in heroku
 const connectionString = process.env.DATABASE_URI
 const db = new pg.Pool({ connectionString , ssl: { rejectUnauthorized: false }})
 

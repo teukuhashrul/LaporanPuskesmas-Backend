@@ -168,7 +168,7 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, id_laporan, catat
             let insertFotoQuery = `INSERT INTO public.foto_laporan (image, id_laporan) VALUES `
 
             if (arr_of_foto.length == 1) {
-                insertFotoQuery += ` (${arr_of_foto[0]} , ${id_laporan})`
+                insertFotoQuery += ` '(${arr_of_foto[0]}' , ${id_laporan})`
             } else {
                 arr_of_foto.map((foto_element, index) => {
                     if (index == arr_of_foto.length - 1) {
