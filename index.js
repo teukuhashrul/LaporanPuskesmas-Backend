@@ -79,14 +79,14 @@ app.use(function (request, response, next) {
 
 
 // for production
-// app.listen(process.env.PORT || 5000, () => {
-//     console.log("Server running on port  !");
-// });
+app.listen(process.env.PORT || 5000, () => {
+    console.log("Server running on port  !");
+});
 
 // // for local testing 
-app.listen(5000, () => {
-    console.log("Server running on port 5000 !");
-});
+// app.listen(5000, () => {
+//     console.log("Server running on port 5000 !");
+// });
 
 
 app.get('/', (req, res) => {
