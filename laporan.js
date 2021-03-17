@@ -1,4 +1,11 @@
 import { db } from './db.js'
+import { insert_Laporan_Deskripsi_Singkat } from './deskripsi_singkat.js'
+import { insert_foto_laporan } from './foto_laporan.js'
+
+
+
+
+
 
 /**
  *  Promised based function create laporan
@@ -9,10 +16,10 @@ import { db } from './db.js'
  * @param {number} id_status 
  * @returns 
  */
-let createLaporan = (alamat, latitude, longitude, nama_terlapor, id_status) => {
+let insertLaporan = (catatan, alamat, latitude, longitude, nama_terlapor, id_status) => {
     let query = `INSERT INTO public.laporan
-    ( alamat, latitude, longitude,  nama_terlapor, id_status)
-    VALUES( '${alamat}', ${latitude}, ${longitude}, '${nama_terlapor}', ${id_status});`
+    (waktu_dilaporkan , catatan, alamat, latitude, longitude,  nama_terlapor, id_status)
+    VALUES(NOW() ,'${catatan}' ,'${alamat}', ${latitude}, ${longitude}, '${nama_terlapor}', ${id_status});`
 
 
     return new Promise(function (resolve, reject) {
@@ -136,10 +143,11 @@ let getAllLaporanAssignedToUser = (id_status, id_user) => {
  *     catatan 
  * 
  */
-let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, id_laporan, catatan) => {
-    console.log("tes")
-    return new Promise(function (resolve, reject) {
+let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitude, catatan, alamat, nama_terlapor, id_user) => {
+    latitude = parseFloat(parseFloat(latitude).toFixed(6))
+    longitude = parseFloat(parseFloat(longitude).toFixed(8))
 
+    return new Promise(function (resolve, reject) {
         if (!catatan) catatan = '-'
         if (!arr_of_foto) {
             reject("Please provide valid Array of Photos")
@@ -160,59 +168,46 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, id_laporan, catat
             return
         }
 
-        // 1. Update Laporan
-        let updateLaporanQuery = `update public.laporan  set catatan = '${catatan}' , id_status =3 , waktu_dilaporkan = now()  where id = ${id_laporan};`
-        db.query(updateLaporanQuery).then((updateResult) => {
-            console.log(updateResult)
-            //  2. Insert Array Of Photo
-            let insertFotoQuery = `INSERT INTO public.foto_laporan (image, id_laporan) VALUES `
 
-            if (arr_of_foto.length == 1) {
-                insertFotoQuery += ` ('${arr_of_foto[0]}' , ${id_laporan})`
-            } else {
-                arr_of_foto.map((foto_element, index) => {
-                    if (index == arr_of_foto.length - 1) {
-                        insertFotoQuery += ` ('${foto_element}' , ${id_laporan})`
-                    } else {
-                        insertFotoQuery += ` ('${foto_element}' , ${id_laporan}), `
 
-                    }
-                })
-            }
+        // 1 Insert Data 
+        insertLaporan(catatan, alamat, latitude, longitude, nama_terlapor, 1).then((result) => {
+            // Get Current Data
+            let getQuery = `select * from public.laporan where alamat like '${alamat}' and nama_terlapor like '${nama_terlapor}'`
+            // 2.get data
+            db.query(getQuery).then((getResult) => {
+                let id_laporan = getResult.rows[0].id
+                insert_Laporan_Deskripsi_Singkat(id_laporan , arr_of_deskripsi_singkat_id).then((insert_deskripsi_result)=>{
 
-            db.query(insertFotoQuery).then((insertFotoResult) => {
-                console.log(insertFotoResult)
-                let insertDeskripsiQuery = `INSERT INTO public.laporan_deskripsi_singkat (id_deskripsi_singkat, id_laporan) VALUES  `
-
-                if (arr_of_deskripsi_singkat_id == 1) {
-                    insertDeskripsiQuery += ` (${arr_of_deskripsi_singkat_id[0]}, ${id_laporan})`
-                } else {
-                    arr_of_deskripsi_singkat_id.map((deskripsi_singkat_element, index) => {
-                        if (index == arr_of_deskripsi_singkat_id.length - 1) {
-                            insertDeskripsiQuery += ` (${deskripsi_singkat_element} , ${id_laporan})`
-                        } else {
-                            insertDeskripsiQuery += ` (${deskripsi_singkat_element} , ${id_laporan}), `
-                        }
+                    insert_foto_laporan(arr_of_foto , id_laporan).then((insert_foto_result)=>{
+                        resolve("Successfully Submit Laporan ")
                     })
-                }
-
-                db.query(insertDeskripsiQuery).then((insertDeskripsiResult) => {
-                    console.log(insertDeskripsiResult)
-
-                    resolve(`Laporan ${id_laporan} successfully submitted `)
-                }).catch((insertDeskripsiErr) => {
-                    console.log(insertDeskripsiErr)
+                }).catch((err_insert_deskripsi)=>{
+                    reject(err_insert_deskripsi)
                 })
-            }).catch((insertFotoErr) => {
-                console.log(insertFotoErr)
+
+
+
+
+
+            }).catch((err) => {
+                console.log("error get")
+                console.log(err)
             })
 
+
         }).catch((err) => {
-            //handle kalo id laporan nya gaada 
-            // handle kalo catatannya kosong 
+            console.log("error create laporan")
+            console.log(err)
         })
+
+
     })
 }
 
 
-export { createLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan }
+
+
+
+
+export { insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan }

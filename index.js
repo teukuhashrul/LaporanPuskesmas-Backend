@@ -6,7 +6,7 @@ import multer from 'multer'
 import { getBooks } from './db.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
-import { createLaporan, assignLaporanToUser ,getAllLaporan ,getAllLaporanAssignedToUser, submitLaporan} from './laporan.js'
+import {  assignLaporanToUser ,getAllLaporan ,getAllLaporanAssignedToUser, submitLaporan} from './laporan.js'
 import {getAllDeskripsiSingkat} from './deskripsi_singkat.js'
 dotenv.config()
 // get access token secret from env file 
@@ -545,15 +545,24 @@ app.get('/get_deskripsi_singkat' , (req,res)=>{
 app.post('/submit_laporan' , (req,res)=>{
     let arr_of_foto = req.body.arr_of_foto 
     let arr_of_deskripsi_singkat_id = req.body.arr_of_deskripsi_singkat_id
+    let longitude = req.body.longitude 
+    let latitude = req.body.latitude
     const catatan = req.body.catatan
-    const id_laporan = req.body.id_laporan
+    const alamat = req.body.alamat 
+    const nama_terlapor = req.body.nama_terlapor 
+    const id_user = req.body.id_user
 
     let missingParamArr = [] 
 
-    if(!id_laporan) missingParamArr.push("id_laporan") 
     if(!arr_of_foto) missingParamArr.push("arr_of_foto")
     if(!arr_of_deskripsi_singkat_id) missingParamArr.push("arr_of_deskripsi_singkat_id")
+    if(!longitude) missingParamArr.push("longitude")
+    if(!latitude) missingParamArr.push("latitude")
+    if(!alamat) missingParamArr.push("alamat")
+    if(!nama_terlapor) missingParamArr.push("nama_terlapor")
+    if(!id_user) missingParamArr.push("id_user")
 
+    
     let errMissingParamMessage = 'Param : '
     if(missingParamArr.length > 0){
         missingParamArr.map((element, index) =>{
@@ -572,6 +581,19 @@ app.post('/submit_laporan' , (req,res)=>{
         return
     }
 
+    let wrongNumVar = ""
+    if(isNaN(latitude)) wrongNumVar = 'latitude'
+    if(isNaN(longitude)) wrongNumVar = 'longitude'
+    if(isNaN(id_user)) wrongNumVar  = 'id_user' 
+    
+    if(wrongNumVar != ""){
+        res.status(406).json({
+            statuscode : 406 , 
+            message : `Please send a valid number data type for ${wrongNumVar}`
+        })
+        return
+    }
+
 
 
     if(!Array.isArray(arr_of_foto)){
@@ -585,7 +607,7 @@ app.post('/submit_laporan' , (req,res)=>{
 
     }
 
-    submitLaporan(arr_of_foto,arr_of_deskripsi_singkat_id , id_laporan , catatan).then((submitResult)=>{
+    submitLaporan(arr_of_foto, arr_of_deskripsi_singkat_id, latitude , longitude , catatan , alamat, nama_terlapor , id_user).then((submitResult)=>{
         res.json({
             statuscode : 200 ,
             message    : submitResult
