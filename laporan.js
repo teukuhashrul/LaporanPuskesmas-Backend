@@ -1,7 +1,7 @@
 import { db } from './db.js'
 import { insert_Laporan_Deskripsi_Singkat } from './deskripsi_singkat.js'
 import { insert_foto_laporan } from './foto_laporan.js'
-
+import { insert_user_laporan } from './user_laporan.js'
 
 
 
@@ -45,11 +45,12 @@ let insertLaporan = (catatan, alamat, latitude, longitude, nama_terlapor, id_sta
 let assignLaporanToUser = (id_laporan, id_user, id_jenis_laporan) => {
     let insertUserLaporanQuery = `INSERT INTO public.user_laporan
     (tanggal_assignment, id_jenis_pelapor, id_user, id_laporan)
-    VALUES(NOW(), 1, ${id_user}, ${id_laporan});`
+    VALUES(NOW(), 2, ${id_user}, ${id_laporan});`
 
 
     let updateLaporanQuery = `UPDATE public.laporan SET id_status=2 WHERE id=${id_laporan}`
     return new Promise(function (resolve, reject) {
+
         db.query(insertUserLaporanQuery).then((insertResult) => {
             console.log(insertResult);
 
@@ -89,7 +90,7 @@ let getAllLaporan = (id_status) => {
 
     if (id_status) query += `where  id_status = ${id_status}`
 
-
+    console.log(query)
     return new Promise(function (resolve, reject) {
         db.query(query).then((queryResult) => {
             resolve(queryResult.rows)
@@ -177,15 +178,22 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitu
             // 2.get data
             db.query(getQuery).then((getResult) => {
                 let id_laporan = getResult.rows[0].id
-                insert_Laporan_Deskripsi_Singkat(id_laporan , arr_of_deskripsi_singkat_id).then((insert_deskripsi_result)=>{
 
-                    insert_foto_laporan(arr_of_foto , id_laporan).then((insert_foto_result)=>{
-                        resolve("Successfully Submit Laporan ")
+                // 3. insert user laporan
+                insert_user_laporan(1 , id_user , id_laporan).then((result_insert_user_laporan) => {
+                    // 4. insert laporan deskripsi singkat
+                    insert_Laporan_Deskripsi_Singkat(id_laporan, arr_of_deskripsi_singkat_id).then((insert_deskripsi_result) => {
+                        // 5. insert foto laporan 
+                        insert_foto_laporan(arr_of_foto, id_laporan).then((insert_foto_result) => {
+                            resolve("Successfully Submit Laporan ")
+                        })
+                    }).catch((err_insert_deskripsi) => {
+                        reject(err_insert_deskripsi)
                     })
-                }).catch((err_insert_deskripsi)=>{
-                    reject(err_insert_deskripsi)
-                })
 
+                }).catch((err_result_insert_user_laporan)=>{
+                    reject(err_result_insert_user_laporan)
+                })
 
 
 

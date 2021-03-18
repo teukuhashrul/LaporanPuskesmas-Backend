@@ -6,8 +6,8 @@ import multer from 'multer'
 import { getBooks } from './db.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
-import {  assignLaporanToUser ,getAllLaporan ,getAllLaporanAssignedToUser, submitLaporan} from './laporan.js'
-import {getAllDeskripsiSingkat} from './deskripsi_singkat.js'
+import { assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan } from './laporan.js'
+import { getAllDeskripsiSingkat } from './deskripsi_singkat.js'
 dotenv.config()
 // get access token secret from env file 
 const accessTokenSecret = process.env.ACCESSTOKENSECRET
@@ -456,7 +456,7 @@ app.post('/assign_laporan_to_user', (req, res) => {
 
     } else {
 
-        if (isNaN(id_user) || isNaN(id_laporan) ) {
+        if (isNaN(id_user) || isNaN(id_laporan)) {
             res.status(406).json({
                 statuscode: 406,
                 message: "Please input valid number data type "
@@ -465,16 +465,16 @@ app.post('/assign_laporan_to_user', (req, res) => {
         }
 
 
-        assignLaporanToUser(id_laporan,id_user, 1).then((assignResult)=>{
+        assignLaporanToUser(id_laporan, id_user, 2).then((assignResult) => {
             res.json({
-                statuscode : 200,
-                message : assignResult
+                statuscode: 200,
+                message: assignResult
             })
-        }).catch((errResult)=>{
+        }).catch((errResult) => {
             console.log(errResult);
             res.status(422).json({
-                statuscode : 422,
-                message  :  errResult
+                statuscode: 422,
+                message: errResult
             })
         })
     }
@@ -486,19 +486,19 @@ app.post('/assign_laporan_to_user', (req, res) => {
 
 
 // get all laporan 
-app.get('/get_all_laporan' , (req,res)=>{
-    const id_status = req.query.id_status 
+app.get('/get_all_laporan', (req, res) => {
+    const id_status = req.query.id_status;
 
-
-    getAllLaporan(id_status).then((result)=>{
+    console.log(`idstatus ${id_status}`)
+    getAllLaporan(id_status).then((result) => {
         res.json({
-            statuscode : 200,
-            data : result
+            statuscode: 200,
+            data: result
         })
-    }).catch((error)=>{
+    }).catch((error) => {
         res.status(422).json({
-            statuscode : 422,
-            message : error
+            statuscode: 422,
+            message: error
         })
     })
 
@@ -506,117 +506,118 @@ app.get('/get_all_laporan' , (req,res)=>{
 })
 
 // get all laporan assigned to user 
-app.get('/get_all_laporan_assigned_to_user' , (req,res)=>{
+app.get('/get_all_laporan_assigned_to_user', (req, res) => {
 
-    const id_status = req.query.id_status 
-    const id_user = req.query.id_user 
+    const id_status = req.query.id_status
+    const id_user = req.query.id_user
 
-    
-    getAllLaporanAssignedToUser(id_status, id_user).then((result)=>{
+    console.log(`id_status ${id_status} id_user ${id_user}`)
+
+    getAllLaporanAssignedToUser(id_status, id_user).then((result) => {
         res.json({
-            statuscode : 200,
-            data : result
+            statuscode: 200,
+            data: result
         })
-    }).catch((error)=>{
+    }).catch((error) => {
         res.status(422).json({
-            statuscode : 422,
-            message : error
+            statuscode: 422,
+            message: error
         })
     })
-    
+
 })
 
 // get all deskripsi singkat 
-app.get('/get_deskripsi_singkat' , (req,res)=>{
-    getAllDeskripsiSingkat().then((resultQuery)=>{
+app.get('/get_deskripsi_singkat', (req, res) => {
+    getAllDeskripsiSingkat().then((resultQuery) => {
         res.json({
-            statuscode : 200, 
-            data : resultQuery
+            statuscode: 200,
+            data: resultQuery
         })
-    }).catch((err)=>{
+    }).catch((err) => {
         res.status(422).json({
-            statuscode : 422,
-            message : err
+            statuscode: 422,
+            message: err
         })
     })
 })
 
 // submit laporan
-app.post('/submit_laporan' , (req,res)=>{
-    let arr_of_foto = req.body.arr_of_foto 
+app.post('/submit_laporan', (req, res) => {
+    let arr_of_foto = req.body.arr_of_foto
     let arr_of_deskripsi_singkat_id = req.body.arr_of_deskripsi_singkat_id
-    let longitude = req.body.longitude 
+    let longitude = req.body.longitude
     let latitude = req.body.latitude
     const catatan = req.body.catatan
-    const alamat = req.body.alamat 
-    const nama_terlapor = req.body.nama_terlapor 
+    const alamat = req.body.alamat
+    const nama_terlapor = req.body.nama_terlapor
     const id_user = req.body.id_user
 
-    let missingParamArr = [] 
+    let missingParamArr = []
 
-    if(!arr_of_foto) missingParamArr.push("arr_of_foto")
-    if(!arr_of_deskripsi_singkat_id) missingParamArr.push("arr_of_deskripsi_singkat_id")
-    if(!longitude) missingParamArr.push("longitude")
-    if(!latitude) missingParamArr.push("latitude")
-    if(!alamat) missingParamArr.push("alamat")
-    if(!nama_terlapor) missingParamArr.push("nama_terlapor")
-    if(!id_user) missingParamArr.push("id_user")
+    if (!arr_of_foto) missingParamArr.push("arr_of_foto")
+    if (!arr_of_deskripsi_singkat_id) missingParamArr.push("arr_of_deskripsi_singkat_id")
+    if (!longitude) missingParamArr.push("longitude")
+    if (!latitude) missingParamArr.push("latitude")
+    if (!alamat) missingParamArr.push("alamat")
+    if (!nama_terlapor) missingParamArr.push("nama_terlapor")
+    if (!id_user) missingParamArr.push("id_user")
 
-    
+
     let errMissingParamMessage = 'Param : '
-    if(missingParamArr.length > 0){
-        missingParamArr.map((element, index) =>{
-            if(index ==0){
+    if (missingParamArr.length > 0) {
+        missingParamArr.map((element, index) => {
+            if (index == 0) {
                 errMissingParamMessage += ` ${element}`
-            }else {
+            } else {
                 errMissingParamMessage += ` ,${element} `
 
             }
         })
         errMissingParamMessage += ` is missing from body param , please provide valid param`
         res.status(406).json({
-            statuscode : 406,
-            message : errMissingParamMessage
+            statuscode: 406,
+            message: errMissingParamMessage
         })
         return
     }
 
     let wrongNumVar = ""
-    if(isNaN(latitude)) wrongNumVar = 'latitude'
-    if(isNaN(longitude)) wrongNumVar = 'longitude'
-    if(isNaN(id_user)) wrongNumVar  = 'id_user' 
-    
-    if(wrongNumVar != ""){
+    if (isNaN(latitude)) wrongNumVar = 'latitude'
+    if (isNaN(longitude)) wrongNumVar = 'longitude'
+    if (isNaN(id_user)) wrongNumVar = 'id_user'
+
+    if (wrongNumVar != "") {
         res.status(406).json({
-            statuscode : 406 , 
-            message : `Please send a valid number data type for ${wrongNumVar}`
+            statuscode: 406,
+            message: `Please send a valid number data type for ${wrongNumVar}`
         })
         return
     }
 
 
 
-    if(!Array.isArray(arr_of_foto)){
+    if (!Array.isArray(arr_of_foto)) {
         let temp = arr_of_foto
         arr_of_foto = [temp]
     }
 
-    if(!Array.isArray(arr_of_deskripsi_singkat_id)){
+    if (!Array.isArray(arr_of_deskripsi_singkat_id)) {
         let temp = arr_of_deskripsi_singkat_id
         arr_of_deskripsi_singkat_id = [temp]
 
     }
 
-    submitLaporan(arr_of_foto, arr_of_deskripsi_singkat_id, latitude , longitude , catatan , alamat, nama_terlapor , id_user).then((submitResult)=>{
+    submitLaporan(arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitude, catatan, alamat, nama_terlapor, id_user).then((submitResult) => {
         res.json({
-            statuscode : 200 ,
-            message    : submitResult
+            statuscode: 200,
+            message: submitResult
         })
-        
-    }).catch((errSubmit)=>{
+
+    }).catch((errSubmit) => {
         res.status(422).json({
-            statuscode : 422,
-            message  :  errSubmit
+            statuscode: 422,
+            message: errSubmit
         })
     })
 
