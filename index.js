@@ -6,7 +6,7 @@ import multer from 'multer'
 import { getBooks } from './db.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
-import { assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan } from './laporan.js'
+import { assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan ,getDetailLaporanById} from './laporan.js'
 import { getAllDeskripsiSingkat } from './deskripsi_singkat.js'
 dotenv.config()
 // get access token secret from env file 
@@ -625,3 +625,26 @@ app.post('/submit_laporan', (req, res) => {
 
 })
 
+
+app.get('/get_laporan_detail_by_id' , (req ,res) =>{
+    const id_laporan = req.query.id_laporan 
+
+    if(!id_laporan){
+        res.status(406).json({
+            statuscode : 406,
+            message : "please provide id laporan in the param query "
+        })
+        return 
+    }
+
+
+    getDetailLaporanById(id_laporan).then((getDetailResult)=>{
+        res.json({
+            statuscode : 200,
+            data : getDetailResult
+        })
+    }).catch((error)=>{
+        console.log(error); 
+    })
+
+})

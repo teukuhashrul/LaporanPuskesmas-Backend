@@ -1,5 +1,5 @@
 import { db } from './db.js'
-import { insert_Laporan_Deskripsi_Singkat } from './deskripsi_singkat.js'
+import { getAllDeskripsiSingkat, insert_Laporan_Deskripsi_Singkat } from './deskripsi_singkat.js'
 import { insert_foto_laporan } from './foto_laporan.js'
 import { insert_user_laporan } from './user_laporan.js'
 
@@ -180,7 +180,7 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitu
                 let id_laporan = getResult.rows[0].id
 
                 // 3. insert user laporan
-                insert_user_laporan(1 , id_user , id_laporan).then((result_insert_user_laporan) => {
+                insert_user_laporan(1, id_user, id_laporan).then((result_insert_user_laporan) => {
                     // 4. insert laporan deskripsi singkat
                     insert_Laporan_Deskripsi_Singkat(id_laporan, arr_of_deskripsi_singkat_id).then((insert_deskripsi_result) => {
                         // 5. insert foto laporan 
@@ -191,7 +191,7 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitu
                         reject(err_insert_deskripsi)
                     })
 
-                }).catch((err_result_insert_user_laporan)=>{
+                }).catch((err_result_insert_user_laporan) => {
                     reject(err_result_insert_user_laporan)
                 })
 
@@ -214,8 +214,55 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitu
 }
 
 
+/**
+ * GET Laporan By Id 
+ * 
+ */
+let getDetailLaporanById = (id_laporan) => {
+    let getLaporanQuery = `select * from public."laporan" where id=${id_laporan}`;
+    return new Promise(function (resolve, reject) {
+        db.query(getLaporanQuery).then((laporanResult) => {
+            if (laporanResult.rows.length > 0) {
+                let thisLaporan = laporanResult.rows[0];
+
+                let getFotoLaporanQuery = `select id,image from public."foto_laporan" where id_laporan=${id_laporan}`
+                db.query(getFotoLaporanQuery).then((getFotoResult) => {
+                    let arr_of_foto = getFotoResult.rows ; 
+
+                    let getDeskripsiSingkatQuery = `select id_deskripsi_singkat , deskripsi from public.laporan_deskripsi_singkat
+                    join public.deskripsi_singkat  on public.laporan_deskripsi_singkat.id_deskripsi_singkat  = deskripsi_singkat.id 
+                    where id_laporan = ${id_laporan}`
+
+                    db.query(getDeskripsiSingkatQuery).then((deskripsiSingkatResult)=>{
+                       let arr_of_deskripsi_singkat = deskripsiSingkatResult.rows;
+
+
+                        thisLaporan.arr_of_foto = arr_of_foto
+                        thisLaporan.arr_of_deskripsi_singkat = arr_of_deskripsi_singkat
+
+                        resolve(thisLaporan)
+                    }).catch((errorGetDeskripsiSingkat)=>{
+                        console.log(errorGetDeskripsiSingkat)
+                    })  
+
+                }).catch((errorGetFoto) => {
+                    console.log(errorGetFoto)
+                })
+            } else {
+                reject("no laporan data for id " + id_laporan)
+            }
+
+
+        }).catch((errLaporanResult) => {
+            console.log(errLaporanResult)
+        })
+
+    })
+
+}
 
 
 
 
-export { insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan }
+
+export { insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan , getDetailLaporanById }
