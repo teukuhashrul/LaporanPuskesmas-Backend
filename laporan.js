@@ -227,23 +227,23 @@ let getDetailLaporanById = (id_laporan) => {
 
                 let getFotoLaporanQuery = `select id,image from public."foto_laporan" where id_laporan=${id_laporan}`
                 db.query(getFotoLaporanQuery).then((getFotoResult) => {
-                    let arr_of_foto = getFotoResult.rows ; 
+                    let arr_of_foto = getFotoResult.rows;
 
                     let getDeskripsiSingkatQuery = `select id_deskripsi_singkat , deskripsi from public.laporan_deskripsi_singkat
                     join public.deskripsi_singkat  on public.laporan_deskripsi_singkat.id_deskripsi_singkat  = deskripsi_singkat.id 
                     where id_laporan = ${id_laporan}`
 
-                    db.query(getDeskripsiSingkatQuery).then((deskripsiSingkatResult)=>{
-                       let arr_of_deskripsi_singkat = deskripsiSingkatResult.rows;
+                    db.query(getDeskripsiSingkatQuery).then((deskripsiSingkatResult) => {
+                        let arr_of_deskripsi_singkat = deskripsiSingkatResult.rows;
 
 
                         thisLaporan.arr_of_foto = arr_of_foto
                         thisLaporan.arr_of_deskripsi_singkat = arr_of_deskripsi_singkat
 
                         resolve(thisLaporan)
-                    }).catch((errorGetDeskripsiSingkat)=>{
+                    }).catch((errorGetDeskripsiSingkat) => {
                         console.log(errorGetDeskripsiSingkat)
-                    })  
+                    })
 
                 }).catch((errorGetFoto) => {
                     console.log(errorGetFoto)
@@ -262,7 +262,47 @@ let getDetailLaporanById = (id_laporan) => {
 }
 
 
+/**
+ * Get all laporan for web api version 
+ * returns all laporan with deskripsi singkat 
+ */
+let getAllLaporanWithDeskripsi = () => {
+    return new Promise(function (resolve, reject) {
+
+        getAllLaporan().then((resultAllLaporan) => {
+            let queryGetLaporanDeskripsiSingkat = `select id_laporan,id_deskripsi_singkat , deskripsi from laporan_deskripsi_singkat left outer join deskripsi_singkat on 
+            laporan_deskripsi_singkat.id_deskripsi_singkat = deskripsi_singkat.id `
+
+
+            db.query(queryGetLaporanDeskripsiSingkat).then((resultGetLaporanDeskripsiSingkat) => {
+                let arr_laporan_deskripsi_singkat = resultGetLaporanDeskripsiSingkat.rows;
+
+                resultAllLaporan.forEach((item, idx) => {
+                    let currArrDeskripsiSingkat = []
+
+                    arr_laporan_deskripsi_singkat.forEach((desItem) => {
+                        if (item.id == desItem.id_laporan) {
+                            currArrDeskripsiSingkat.push(
+                                { 'id_deskripsi_singkat': desItem.id_deskripsi_singkat, 'deskripsi': desItem.deskripsi }
+                            )
+                        }
+                    })
+
+                    resultAllLaporan[idx].arr_of_deskripsi_singkat = currArrDeskripsiSingkat
+
+                })
+
+                resolve(resultAllLaporan)
+            }).catch((errorGetDeskripsiSingkat) => {
+                console.log(errorGetDeskripsiSingkat)
+            })
+        }).catch((errLaporan) => {
+            console.log(errLaporan)
+        })
+    })
+}
 
 
 
-export { insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan , getDetailLaporanById }
+
+export { insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan, getDetailLaporanById, getAllLaporanWithDeskripsi }

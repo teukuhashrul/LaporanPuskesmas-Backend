@@ -6,7 +6,10 @@ import multer from 'multer'
 import { getBooks } from './db.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
-import { assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan ,getDetailLaporanById} from './laporan.js'
+import {
+    assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan,
+    getDetailLaporanById, getAllLaporanWithDeskripsi
+} from './laporan.js'
 import { getAllDeskripsiSingkat } from './deskripsi_singkat.js'
 dotenv.config()
 // get access token secret from env file 
@@ -625,26 +628,41 @@ app.post('/submit_laporan', (req, res) => {
 
 })
 
+// get one laporan detail with id 
+app.get('/get_laporan_detail_by_id', (req, res) => {
+    const id_laporan = req.query.id_laporan
 
-app.get('/get_laporan_detail_by_id' , (req ,res) =>{
-    const id_laporan = req.query.id_laporan 
-
-    if(!id_laporan){
+    if (!id_laporan) {
         res.status(406).json({
-            statuscode : 406,
-            message : "please provide id laporan in the param query "
+            statuscode: 406,
+            message: "please provide id laporan in the param query "
         })
-        return 
+        return
     }
 
 
-    getDetailLaporanById(id_laporan).then((getDetailResult)=>{
+    getDetailLaporanById(id_laporan).then((getDetailResult) => {
         res.json({
-            statuscode : 200,
-            data : getDetailResult
+            statuscode: 200,
+            data: getDetailResult
         })
-    }).catch((error)=>{
-        console.log(error); 
+    }).catch((error) => {
+        console.log(error);
     })
 
+})
+
+
+app.get('/get_all_laporan_with_deskripsi', (req, res) => {
+    getAllLaporanWithDeskripsi().then((resultLaporan) => {
+        res.json({
+            statuscode: 200,
+            data: resultLaporan
+        })
+    }).catch((error) => {
+        res.status(422).json({
+            statuscode: 422,
+            message: "error in back end please contact admin "
+        })
+    })
 })
