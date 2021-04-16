@@ -302,7 +302,35 @@ let getAllLaporanWithDeskripsi = () => {
     })
 }
 
+/**
+ * update laporan catatan data
+ * @param {number} id_laporan 
+ * @param {string} newCatatan 
+ */
+let updateCatatanLaporan = (id_laporan, newCatatan) => {
+    let queryUpdateCatatan = `update public.laporan set catatan = '${newCatatan}' where id  = ${id_laporan}`
+
+    return new Promise(function (resolve, reject) {
+
+        db.query(queryUpdateCatatan).then((result) => {
+            if (result.rowCount > 0) {
+                resolve("Successfully update laporan for laporan id " + id_laporan)
+            } else {
+                reject("please provide a valid id laporan ")
+
+            }
+        }).catch((error) => {
+            console.log(error)
+
+            if (error.code == '42601') {
+                reject("please provide a valid id laporan ")
+            }
+        })
+    })
+}
 
 
 
-export { insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan, getDetailLaporanById, getAllLaporanWithDeskripsi }
+
+export { insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan, getDetailLaporanById, getAllLaporanWithDeskripsi
+,updateCatatanLaporan }

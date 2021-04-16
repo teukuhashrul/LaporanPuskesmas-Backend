@@ -8,7 +8,7 @@ import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
 import {
     assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan,
-    getDetailLaporanById, getAllLaporanWithDeskripsi
+    getDetailLaporanById, getAllLaporanWithDeskripsi, updateCatatanLaporan
 } from './laporan.js'
 import { getAllDeskripsiSingkat } from './deskripsi_singkat.js'
 dotenv.config()
@@ -665,4 +665,47 @@ app.get('/get_all_laporan_with_deskripsi', (req, res) => {
             message: "error in back end please contact admin "
         })
     })
+})
+
+
+app.put('/update_catatan_laporan', (req, res) => {
+    let id_laporan = req.body.id_laporan
+    let catatan = req.body.catatan
+
+
+    let missingBody = [];
+    if (!id_laporan) missingBody.push("id_laporan");
+    if (!catatan) missingBody.push("catatan");
+
+    if (missingBody.length > 0) {
+        let message = '';
+        missingBody.map((element, index) => {
+            if (index == 0) {
+                message += `${element} `;
+            } else if (index == missingBody.length - 1) {
+                message += `and ${element}`;
+            } else {
+                message += `,${element} `;
+            }
+        })
+
+        message += ' is missing from param body , please provide valid param'
+        res.status(406).json({
+            statuscode: 406,
+            message: message
+        })
+    } else {
+        updateCatatanLaporan(id_laporan , catatan).then((updateResult)=>{
+            res.json({
+                statuscode : 200, 
+                message : updateResult
+            })
+        }).catch((errUpdate)=>{
+            res.status(422).json({
+                statuscode : 422 , 
+                message : errUpdate
+            })
+        })
+    }
+
 })
