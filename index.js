@@ -11,6 +11,7 @@ import {
     getDetailLaporanById, getAllLaporanWithDeskripsi, updateCatatanLaporan
 } from './laporan.js'
 import { getAllDeskripsiSingkat } from './deskripsi_singkat.js'
+import {get_all_history_laporan} from './user_laporan.js'
 
 import cors from 'cors'
 dotenv.config()
@@ -713,4 +714,19 @@ app.put('/update_catatan_laporan', (req, res) => {
         })
     }
 
+})
+
+
+app.get('/get_all_history_laporan' , (req,res)=>{
+    get_all_history_laporan().then((resultData)=>{
+        res.json({
+            statuscode : 200,
+            data : resultData
+        })
+    }).catch((err)=>{
+        res.status(422).json({
+            statuscode : 422 , 
+            message : 'Error, handling in development'
+        })
+    })
 })
