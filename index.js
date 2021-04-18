@@ -4,6 +4,9 @@ import bodyParser from 'body-parser'
 import dotenv from 'dotenv';
 import multer from 'multer'
 import { getBooks } from './db.js'
+import atob from 'atob'
+import {FormInputter,ParticipantInputter} from './Inputter.js'
+import {customInput,AddInput,RadioButton,Dropdown,Input,BasicInput,Form} from './Form.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
 import {
@@ -88,7 +91,7 @@ app.use(function (request, response, next) {
 
 
 // for production
-app.listen(process.env.PORT || 5000, () => {
+app.listen( process.env.LOCAL_PORT, () => {
     console.log("Server running on port  !");
 });
 
@@ -729,4 +732,101 @@ app.get('/get_all_history_laporan' , (req,res)=>{
             message : 'Error, handling in development'
         })
     })
+})
+function parseJwt (token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+};
+function getUserID (req){
+    var payload = parseJwt(req.headers.authorization)
+    console.log(payload.id);
+    return payload.id;
+}
+
+app.get('/test',authenticateJWT,async(req,res) => {
+    getUserID(req)
+    generateForm();
+    res.send("OK!");
+})
+
+app.get('/form',authenticateJWT, async(req,res) => {
+    FormInputter.get().then((rest)=>{
+        var links = [];
+        for(var i = 0 ; i < rest.length ; i++){
+            links.push({
+                link:`${process.env.LOCAL_HOST}/form/${rest[i].id}`,
+                title:rest[i].title
+            })
+        }
+        res.json({
+            statuscode: 200,
+            data: links
+        })
+    })
+})
+app.get('/form/:id', async(req,res) => {
+    var id = req.params.id
+    Form.getForm(id).then((form) => {
+        res.send(form.generateForm(false))
+    })
+})
+
+app.get('/see-form/:id',authenticateJWT,async (req,res) => {
+    id = req.params.id
+    var form = await Form.getForm(id)
+    res.send(form.generateForm(true))
+})
+
+app.get('/getSubmitted',authenticateJWT, async (req,res) => {
+    let id = getUserID();
+    var html = await Form.getUserForm({id})
+    res.send(html.generateForm(true))
+})
+app.get('/generateForm',(req,res) => {
+    generateForm()
+    res.send("success!");
+})
+app.post('/submit-form/:formId',authenticateJWT,(req,res) => {
+    var user_id = getUserID()
+    var form_id = req.params.formId;
+    ParticipantInputter.insert({user_id,form_id,answer:req.body})
+    res.send(JSON.stringify(req.body));
+})
+function generateForm(){
+    var form = new Form({forms:[],title:"Test Form"})
+    form.addInputForm({name:"name1",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastname1",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addDropdownForm({title:"Name",name:"name2",isMandatory:false,value:"Marimas",options:[{name:"Bambang",value:"Bambang"},{name:"Marimas",value:"Marimas"}]})
+    form.addInputForm({name:"lastname2",isMandatory:false,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"name3",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastname3",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam4",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam4",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam5",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam5",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam6",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam6",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    FormInputter.insert(form)
+}
+app.get('/preview',(req,res) => {
+    var form = new Form({forms:[],title:"Test Form"})
+    form.addInputForm({name:"name1",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastname[]",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addDropdownForm({title:"Name",name:"name2",isMandatory:false,value:"Marimas",options:[{name:"Bambang",value:"Bambang"},{name:"Marimas",value:"Marimas"}]})
+    form.addInputForm({name:"lastname[]",isMandatory:false,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"name3",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastname[]",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam4",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam4",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam5",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam5",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam6",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam6",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    console.log(req.headers)
+    res.send(form.generateForm(false));
 })
