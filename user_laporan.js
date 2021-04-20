@@ -50,7 +50,7 @@ let regexSearchErrorConstraintColumnPostgre = (errorText) => {
  */
 let get_all_history_laporan = () => {
 
-    let queryGetAllUserLaporan = 'select tanggal_assignment,id_jenis_pelapor, id_user from public."user_laporan" '
+    let queryGetAllUserLaporan = 'select tanggal_assignment,id_jenis_pelapor, id_user from public."user_laporan" order by tanggal_assignment DESC'
 
     return new Promise(function (resolve, reject) {
         db.query(queryGetAllUserLaporan).then((result) => {
