@@ -240,7 +240,18 @@ let getDetailLaporanById = (id_laporan) => {
                         thisLaporan.arr_of_foto = arr_of_foto
                         thisLaporan.arr_of_deskripsi_singkat = arr_of_deskripsi_singkat
 
-                        resolve(thisLaporan)
+                        // get user data who creates this laporan  
+                        let queryGetUser = `select id_jenis_pelapor, tanggal_assignment  , id_user , username , nama FROM public."user_laporan" 
+                        left outer join public."user" on public."user_laporan".id_user = public."user".id where id_laporan = ${id_laporan} order by id_jenis_pelapor ASC`
+
+                        db.query(queryGetUser).then((userResult)=>{
+                            let arr_of_jenis_pelapor  = userResult.rows 
+                            thisLaporan.arr_of_jenis_pelapor =arr_of_jenis_pelapor
+
+                            resolve(thisLaporan)
+                        }).catch((errorGetUser)=>{
+                            console.log(errorGetUser)
+                        })
                     }).catch((errorGetDeskripsiSingkat) => {
                         console.log(errorGetDeskripsiSingkat)
                     })
