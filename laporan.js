@@ -35,42 +35,94 @@ let insertLaporan = (catatan, alamat, latitude, longitude, nama_terlapor, id_sta
 }
 
 /**
- * Assign laporan to specific user 
+ * Assign laporan to specific user
+ * check first : no user assigned or just update 
+ * if no user
+ *  
  *   insert new user_laporan 
  *   update status laporan 
+ * 
+ * if just update 
+ *   update set new user  
+ * 
  * @param {number} id_laporan 
  * @param {number} id_user 
  * @param {number} id_jenis_laporan 
  */
 let assignLaporanToUser = (id_laporan, id_user, id_jenis_laporan) => {
-    let insertUserLaporanQuery = `INSERT INTO public.user_laporan
-    (tanggal_assignment, id_jenis_pelapor, id_user, id_laporan)
-    VALUES(NOW(), 2, ${id_user}, ${id_laporan});`
 
-
-    let updateLaporanQuery = `UPDATE public.laporan SET id_status=2 WHERE id=${id_laporan}`
     return new Promise(function (resolve, reject) {
 
-        db.query(insertUserLaporanQuery).then((insertResult) => {
-            console.log(insertResult);
+        let checkUserLaporan = `select * from public.user_laporan where id_laporan  = ${id_laporan} and id_jenis_pelapor  = 2`
 
-            db.query(updateLaporanQuery).then((updateLaporanResult) => {
-                console.log(updateLaporanResult)
-                resolve(`Successfully Assign Laporan Id ${id_laporan} to User ${id_user}`)
-            }).catch((updateErr) => {
-                console.log("err update");
-                console.log(updateErr)
-            })
-        }).catch((insertErr) => {
-            console.log("err insert")
-            console.log(insertErr);
+        // check first 
+        db.query(checkUserLaporan).then((checkResult) => {
+            // if no user assigned , then assigned new user
+            if (checkResult.rows.length < 1) {
+                let insertUserLaporanQuery = `INSERT INTO public.user_laporan
+                (tanggal_assignment, id_jenis_pelapor, id_user, id_laporan)
+                VALUES(NOW(), 2, ${id_user}, ${id_laporan});`
 
-            if (insertErr.code == '23503') {
+
+                let updateLaporanQuery = `UPDATE public.laporan SET id_status=2 WHERE id=${id_laporan}`
+
+                db.query(insertUserLaporanQuery).then((insertResult) => {
+                    console.log(insertResult);
+
+                    db.query(updateLaporanQuery).then((updateLaporanResult) => {
+                        console.log(updateLaporanResult)
+                        resolve(`Successfully Assign Laporan Id ${id_laporan} to New User ${id_user}`)
+                    }).catch((updateErr) => {
+                        console.log("err update");
+                        console.log(updateErr)
+                    })
+                }).catch((insertErr) => {
+                    console.log("err insert")
+                    console.log(insertErr);
+
+                    if (insertErr.code == '23503') {
+                        reject("Id Laporan / Id User not present in the table")
+                    } else {
+                        reject(insertErr)
+                    }
+                })
+
+
+
+            } else {
+                let updateUserAssigned = `update public.user_laporan set id_user = ${id_user} where id_jenis_pelapor =2 and id_laporan = ${id_laporan}`
+
+                db.query(updateUserAssigned).then((updateUserResult) => {
+                    if (updateUserResult.rowCount > 0) {
+                        resolve("Successfully update assigned user for laporan id " + id_laporan)
+                    } else {
+                        reject("please provide a valid id laporan ")
+
+                    }
+                }).catch((updateErr) => {
+                    if (updateErr.code == '23503') {
+                        reject("Id Laporan / Id User not present in the table")
+                    } else {
+                        reject(updateErr)
+                    }
+                })
+
+            }
+
+
+
+
+
+        }).catch((checkErr) => {
+            if (checkErr.code == '23503') {
                 reject("Id Laporan / Id User not present in the table")
             } else {
-                reject(insertErr)
+                reject(checkErr)
             }
         })
+
+
+
     })
 }
 
@@ -78,19 +130,20 @@ let assignLaporanToUser = (id_laporan, id_user, id_jenis_laporan) => {
 
 /**
  * Function to get all Laporan 
+ * @param {string} searchquery  
  * @param {number} id_status 
  * 
  * 
  */
-let getAllLaporan = (id_status) => {
+let getAllLaporan = (searchQuery, id_status) => {
 
 
     let query = `select * from public.laporan `
 
 
-    if (id_status) query += `where  id_status = ${id_status}`
+    if (searchQuery) query += `where  alamat like '%${searchQuery}%' or catatan like '%${searchQuery}%' or nama_terlapor like '%${searchQuery}%' `
+    else if (id_status) query += `where  id_status = ${id_status}`
 
-    console.log(query)
     return new Promise(function (resolve, reject) {
         db.query(query).then((queryResult) => {
             resolve(queryResult.rows)
@@ -244,12 +297,12 @@ let getDetailLaporanById = (id_laporan) => {
                         let queryGetUser = `select id_jenis_pelapor, tanggal_assignment  , id_user , username , nama FROM public."user_laporan" 
                         left outer join public."user" on public."user_laporan".id_user = public."user".id where id_laporan = ${id_laporan} order by id_jenis_pelapor ASC`
 
-                        db.query(queryGetUser).then((userResult)=>{
-                            let arr_of_jenis_pelapor  = userResult.rows 
-                            thisLaporan.arr_of_jenis_pelapor =arr_of_jenis_pelapor
+                        db.query(queryGetUser).then((userResult) => {
+                            let arr_of_jenis_pelapor = userResult.rows
+                            thisLaporan.arr_of_jenis_pelapor = arr_of_jenis_pelapor
 
                             resolve(thisLaporan)
-                        }).catch((errorGetUser)=>{
+                        }).catch((errorGetUser) => {
                             console.log(errorGetUser)
                         })
                     }).catch((errorGetDeskripsiSingkat) => {
@@ -277,10 +330,10 @@ let getDetailLaporanById = (id_laporan) => {
  * Get all laporan for web api version 
  * returns all laporan with deskripsi singkat 
  */
-let getAllLaporanWithDeskripsi = () => {
+let getAllLaporanWithDeskripsi = (searchQuery) => {
     return new Promise(function (resolve, reject) {
 
-        getAllLaporan().then((resultAllLaporan) => {
+        getAllLaporan(searchQuery).then((resultAllLaporan) => {
             let queryGetLaporanDeskripsiSingkat = `select id_laporan,id_deskripsi_singkat , deskripsi from laporan_deskripsi_singkat left outer join deskripsi_singkat on 
             laporan_deskripsi_singkat.id_deskripsi_singkat = deskripsi_singkat.id `
 
@@ -343,5 +396,7 @@ let updateCatatanLaporan = (id_laporan, newCatatan) => {
 
 
 
-export { insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan, getDetailLaporanById, getAllLaporanWithDeskripsi
-,updateCatatanLaporan }
+export {
+    insertLaporan, assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan, getDetailLaporanById, getAllLaporanWithDeskripsi
+    , updateCatatanLaporan
+}

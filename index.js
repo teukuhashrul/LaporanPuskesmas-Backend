@@ -205,7 +205,8 @@ app.get('/credential', (req, res) => {
 
 // get all users 
 app.get('/users', (req, res) => {
-    getAllUsers().then((result) => {
+    const searchQuery = req.query.searchQuery ; 
+    getAllUsers(searchQuery).then((result) => {
 
         res.json({
             statuscode: 200,
@@ -499,10 +500,11 @@ app.post('/assign_laporan_to_user', (req, res) => {
 
 // get all laporan 
 app.get('/get_all_laporan', (req, res) => {
+    const searchQuery = req.query.searchQuery ; 
     const id_status = req.query.id_status;
 
     console.log(`idstatus ${id_status}`)
-    getAllLaporan(id_status).then((result) => {
+    getAllLaporan(searchQuery,id_status).then((result) => {
         res.json({
             statuscode: 200,
             data: result
@@ -663,7 +665,12 @@ app.get('/get_laporan_detail_by_id', (req, res) => {
 
 
 app.get('/get_all_laporan_with_deskripsi', (req, res) => {
-    getAllLaporanWithDeskripsi().then((resultLaporan) => {
+
+    const searchQuery = req.query.searchQuery; 
+
+
+
+    getAllLaporanWithDeskripsi(searchQuery).then((resultLaporan) => {
         res.json({
             statuscode: 200,
             data: resultLaporan

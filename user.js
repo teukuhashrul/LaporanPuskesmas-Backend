@@ -4,12 +4,12 @@ import {db} from './db.js'
 /**
  * Promised based function
  * Get all the users from the Database 
- * 
+ * @param {text} searchQuery
  */
-let getAllUsers = () => {
+let getAllUsers = (searchQuery) => {
     let query = `select id , username, nama , id_puskesmas from public."user" where enabled = true `
 
-
+    if(searchQuery) query += ` and lower(nama)    like lower('%hashrul%') `
     return new Promise(function (resolve, reject) {
         db.query(query).then((res) => {
             resolve(res.rows)
