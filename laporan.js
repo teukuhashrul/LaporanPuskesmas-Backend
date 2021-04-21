@@ -141,7 +141,7 @@ let getAllLaporan = (searchQuery, id_status) => {
     let query = `select * from public.laporan `
 
 
-    if (searchQuery) query += `where  lower(alamat) like lower('%${searchQuery}%') or lower(catatan) like lower('%${searchQuery}%') or lower(nama_terlapor) like lower('%${searchQuery}%' `
+    if (searchQuery) query += `where  lower(alamat) like lower('%${searchQuery}%') or lower(catatan) like lower('%${searchQuery}%') or lower(nama_terlapor) like lower('%${searchQuery}%') `
     else if (id_status) query += `where  id_status = ${id_status}`
 
     return new Promise(function (resolve, reject) {
