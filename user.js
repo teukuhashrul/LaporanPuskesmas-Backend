@@ -9,7 +9,7 @@ import {db} from './db.js'
 let getAllUsers = (searchQuery) => {
     let query = `select id , username, nama , id_puskesmas from public."user" where enabled = true `
 
-    if(searchQuery) query += ` and lower(nama)    like lower('%hashrul%') `
+    if(searchQuery) query += ` and lower(nama)  like lower('%${searchQuery}%') `
     return new Promise(function (resolve, reject) {
         db.query(query).then((res) => {
             resolve(res.rows)
