@@ -1,4 +1,5 @@
 import dotenv from 'dotenv'
+import e from 'express';
 import { FormInputter } from './Inputter.js';
 dotenv.config()
 class Form{
@@ -92,13 +93,13 @@ class Form{
         <title>Kader Puskesmas!</title>
         <script>
             function add(el){
-                var html = el.parentElement.nextElementSibling.cloneNode(true)
-                var parent = el.parentElement.parentElement
-                html.firstElementChild.innerHTML += '<div class="btn btn-danger" style="height:58px;width:9%;margin-top:-22px" onclick=del(this)>-</div>'
+                var html = el.nextElementSibling.cloneNode(true)
+                var parent = el.parentElement
+                html.firstElementChild.innerHTML += '<div class="btn btn-danger" style="width:32px;height:58px;margin-top:-22px;display:inline-block" onclick=del(this)>-</div>'
                 parent.appendChild(html)
             }
             function del(el){
-                el.parentElement.remove()
+                el.parentElement.parentElement.remove()
             }
             function getPair(){
                 var form = document.getElementsByTagName("form");
@@ -118,9 +119,15 @@ class Form{
                     }
                 }
                 var formdata = ({url:$(form).attr('action'),data:formData});
-                return formdata;
+                return (formdata);
             }
         </script>
+        <style>
+            .decrease{
+                width: calc(100% - 50px);
+                display: inline-block;
+            }
+        </style>
         <body style="height:100%">
         <form action="${process.env.LOCAL_HOST}:${process.env.LOCAL_PORT}/submit-form/${this.id}" method="post" style="margin:0px !important;height:100%">
 
@@ -146,14 +153,17 @@ class BasicInput{
     static DATE = 4
     static ADD_INPUT = 5;
     static INLINE_INPUT = 6;
+    static CUSTOM_INPUT = 7;
     static idCounter = 1;
     static map = {
         1:"Input",
         2:"Dropdown",
-        3:"RadioButton"
+        3:"RadioButton",
+        5:"AddInput",
+        7:"CustomInput"
     }
 
-    constructor({type,name,title,isMandatory,value},size = 6){
+    constructor({type,name,title,isMandatory,value,size = 6}){
         this.isMandatory = isMandatory
         this.type = type
         this.name = name
@@ -222,10 +232,9 @@ class BasicInput{
 }
 
 class Input extends BasicInput{
-    constructor({name,isMandatory,value,placeholder,title},size = 6,style){
-        super({isMandatory,type:BasicInput.INPUT,name,value,title},size)
+    constructor({name,isMandatory,value,placeholder,title,size=6}){
+        super({isMandatory,type:BasicInput.INPUT,name,value,title,size})
         this.placeholder = placeholder
-        this.style = style
     }
 
     getPlaceholder(){
@@ -241,8 +250,8 @@ class Input extends BasicInput{
 }
 
 class Dropdown extends BasicInput{
-    constructor({name,isMandatory,title,value,options}){   
-        super({isMandatory,type:BasicInput.DROPDOWN,name,value,title})
+    constructor({name,isMandatory,title,value,options,size = 6}){   
+        super({isMandatory,type:BasicInput.DROPDOWN,name,value,title,size})
         this.options = options
     }
 
@@ -296,15 +305,19 @@ class RadioButton extends BasicInput{
 class AddInput extends BasicInput{
     constructor({name,isMandatory,value,childs,title}){
         super({isMandatory,type:BasicInput.ADD_INPUT,name,value,title},6)
-        this.childs = childs
+        this.childs = [];
+        for(var i = 0 ; i < childs.length; i++){
+            this.childs.push(eval(`new ${BasicInput.map[childs[i].type]}(${JSON.stringify(childs[i])})`))
+        }
     }
     getChilds(){
         var string = "";
         for(var i = 0 ; i < this.childs.length; i++){
-            var elstring = "<div class='mt-2'></div>" 
+            var elstring = "<div class='mt-2 decrease'>"
             elstring += this.childs[i].input()
+            elstring += "</div>"
             if(i != 0){
-                elstring += `<div class="btn btn-danger" style="height:58px;width:9%;margin-top:-22px" onclick=del(this)>-</div>`
+                elstring += `<div class="btn btn-danger" style="width:32px;height:58px;margin-top:-22px;display:inline-block" onclick=del(this)>-</div>`
             }
             string += this.childs[i].outerForm(elstring)
         }
@@ -312,11 +325,52 @@ class AddInput extends BasicInput{
     }
     input(){
         return `
-            <div class="form-floating">
-                <input type='text' name="${this.name}" class="form-control" style="width:90%;display:inline;" id="${this.getIdentifier()}" value=${this.getValue()} ${this.getRequiredText("required")}}/>
+            <div class="form-floating decrease">
+                <input type='text' disabled name="${this.name}" class="form-control" id="${this.getIdentifier()}" value=${this.getValue()} }/>
                 ${this.inputHeader()}
-                <div class="btn btn-success" style="height:58px;width:9%;margin-top:-22px" onclick=add(this)>+</div>
             </div>
+            <div class="btn btn-success" style="width:32px;height:58px;margin-top:-22px;display:inline-block" onclick=add(this)>+</div>
+                ${this.getChilds()}
+        `
+    }
+    outerForm(inner){
+        return `
+            <div class="col-md-${this.size} col-xs-12">
+                ${inner}
+            </div>
+        `
+    }
+    addChild(child){
+        this.childs.push(child)
+    }
+}
+
+class CustomInput extends BasicInput{
+    constructor({name,isMandatory,value,childs,title,size = 12}){
+        super({isMandatory,type:BasicInput.CUSTOM_INPUT,name,value,title,size})
+        this.childs = [];
+        for(var i = 0 ; i < childs.length; i++){
+            this.childs.push(eval(`new ${BasicInput.map[childs[i].type]}(${JSON.stringify(childs[i])})`))
+        }
+    }
+    getChilds(){
+        var string = "<div class='row' style=\"padding-left:12px;padding-right:12px\">";
+        for(var i = 0 ; i < this.childs.length; i++){
+            string += this.outerFormRow(this.childs[i])
+        }
+        return string+"</div>"
+    }
+    outerFormRow(child){
+        return `
+            <div class="col-md-${child.size} col-xs-12" style="padding:0px">
+            <div class="form-floating">
+                ${child.input()}
+            </div>
+            </div>
+        `
+    }
+    input(){
+        return `
             ${this.getChilds()}
         `
     }
@@ -325,36 +379,4 @@ class AddInput extends BasicInput{
     }
 }
 
-class customInput extends BasicInput{
-    constructor({name,isMandatory,value,childs,title}){
-        super({isMandatory,type:BasicInput.ADD_INPUT,name,value,title},6)
-        this.childs = childs
-    }
-    getChilds(){
-        var string = "";
-        for(var i = 0 ; i < this.childs.length; i++){
-            var elstring = "<div class='mt-2'></div>" 
-            elstring += this.childs[i].input()
-            if(i != 0){
-                elstring += `<div class="btn btn-danger" style="height:58px;width:9%;margin-top:-22px" onclick=del(this)>-</div>`
-            }
-            string += this.childs[i].outerForm(elstring)
-        }
-        return string
-    }
-    input(){
-        return `
-            <div class="form-floating">
-                <input type='text' name="${this.name}" class="form-control" style="width:90%;display:inline;" id="${this.getIdentifier()}" value=${this.getValue()} ${this.getRequiredText("required")}}/>
-                ${this.inputHeader()}
-                <div class="btn btn-success" style="height:58px;width:9%;margin-top:-22px" onclick=add(this)>+</div>
-            </div>
-            ${this.getChilds()}
-        `
-    }
-    addChild(child){
-        this.childs.push(child)
-    }
-}
-
-export {customInput,AddInput,RadioButton,Dropdown,Input,BasicInput,Form}
+export {CustomInput,AddInput,RadioButton,Dropdown,Input,BasicInput,Form}

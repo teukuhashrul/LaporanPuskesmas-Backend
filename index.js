@@ -6,7 +6,7 @@ import multer from 'multer'
 import { getBooks } from './db.js'
 import atob from 'atob'
 import {FormInputter,ParticipantInputter} from './Inputter.js'
-import {customInput,AddInput,RadioButton,Dropdown,Input,BasicInput,Form} from './Form.js'
+import {AddInput,RadioButton,Dropdown,Input,BasicInput,Form, CustomInput} from './Form.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
 import {
@@ -744,7 +744,6 @@ function parseJwt (token) {
 };
 function getUserID (req){
     var payload = parseJwt(req.headers.authorization)
-    console.log(payload.id);
     return payload.id;
 }
 
@@ -754,25 +753,24 @@ app.get('/test',authenticateJWT,async(req,res) => {
     res.send("OK!");
 })
 
+app.get('/form/:id', async(req,res) => {
+    var id = req.params.id
+    Form.getForm(id).then((form) => {
+        res.send(form.generateForm(false))
+    })
+})
 app.get('/form',authenticateJWT, async(req,res) => {
     FormInputter.get().then((rest)=>{
         var links = [];
         for(var i = 0 ; i < rest.length ; i++){
             links.push({
-                link:`${process.env.LOCAL_HOST}/form/${rest[i].id}`,
+                link:`${process.env.LOCAL_HOST}:${process.env.LOCAL_PORT}/form/${rest[i].id}`,
                 title:rest[i].title
             })
         }
-        res.json({
-            statuscode: 200,
+        res.status(200).json({
             data: links
         })
-    })
-})
-app.get('/form/:id', async(req,res) => {
-    var id = req.params.id
-    Form.getForm(id).then((form) => {
-        res.send(form.generateForm(false))
     })
 })
 
@@ -792,41 +790,137 @@ app.get('/generateForm',(req,res) => {
     res.send("success!");
 })
 app.post('/submit-form/:formId',authenticateJWT,(req,res) => {
-    var user_id = getUserID()
+    var user_id = getUserID(req)
     var form_id = req.params.formId;
     ParticipantInputter.insert({user_id,form_id,answer:req.body})
     res.send(JSON.stringify(req.body));
 })
 function generateForm(){
-    var form = new Form({forms:[],title:"Test Form"})
-    form.addInputForm({name:"name1",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastname1",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addDropdownForm({title:"Name",name:"name2",isMandatory:false,value:"Marimas",options:[{name:"Bambang",value:"Bambang"},{name:"Marimas",value:"Marimas"}]})
-    form.addInputForm({name:"lastname2",isMandatory:false,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"name3",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastname3",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam4",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam4",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam5",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam5",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam6",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam6",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+    var form = new Form({forms:[],title:"Forms"})
+    form.addInputForm({name:"name",isMandatory:true,value:"",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastname",isMandatory:true,value:"",placeholder:"lastname",title:"Last Name"})
+    form.addDropdownForm({title:"Name",name:"name2",isMandatory:false,value:"",options:[{name:"Bambang",value:""},{name:"Marimas",value:""}]})
+    form.addInputForm({name:"lastname2",isMandatory:false,value:"",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"name3",isMandatory:true,value:"",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastname3",isMandatory:true,value:"",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam4",isMandatory:true,value:"",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam4",isMandatory:true,value:"",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam5",isMandatory:true,value:"",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam5",isMandatory:true,value:"",placeholder:"lastname",title:"Last Name"})
+    form.addInputForm({name:"nam6",isMandatory:true,value:"",placeholder:"name",title:"Name"})
+    form.addInputForm({name:"lastnam6",isMandatory:true,value:"",placeholder:"lastname",title:"Last Name"})
     FormInputter.insert(form)
 }
 app.get('/preview',(req,res) => {
-    var form = new Form({forms:[],title:"Test Form"})
-    form.addInputForm({name:"name1",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastname[]",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addDropdownForm({title:"Name",name:"name2",isMandatory:false,value:"Marimas",options:[{name:"Bambang",value:"Bambang"},{name:"Marimas",value:"Marimas"}]})
-    form.addInputForm({name:"lastname[]",isMandatory:false,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"name3",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastname[]",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam4",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam4",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam5",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam5",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam6",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam6",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    console.log(req.headers)
+    var form = new Form({forms:[],title:"Form Alat",id:1})
+    form.addInputForm({name:"desa",isMandatory:true,value:"Hegarmanah",placeholder:"Desa",title:"Desa"})
+    form.addInputForm({name:"rt",isMandatory:true,placeholder:"RT",title:"RT"})
+    form.addInputForm({name:"rw",isMandatory:true,placeholder:"RW",title:"RW"})
+    form.addDropdownForm({
+        name:"team",
+        isMandatory:true,
+        placeholder:"Posyandu",
+        title:"Posyandu",
+        options:[
+            {name:"Flamboyan 1",value:"Flamboyan 1"},
+            {name:"Flamboyan 2",value:"Flamboyan 2"},
+            {name:"Kenanga",value:"Kenanga"},
+            {name:"Anggrek 1",value:"Anggrek 1"},
+            {name:"Anggrek 2",value:"Anggrek 2"},
+            {name:"Anggrek 3",value:"Anggrek 3"},
+            {name:"Anyelir ",value:"Anyelir "},
+            {name:"Nusa Indah ",value:"Nusa Indah "},
+            {name:"Sedap Malam ",value:"Sedap Malam "},
+            {name:"Mawar",value:"Mawar"},
+            {name:"Dahlia 1",value:"Dahlia 1"},
+            {name:"Dahlia 2",value:"Dahlia 2"},
+            {name:"Melati 1",value:"Melati 1"},
+            {name:"Melati 2",value:"Melati 2"},
+            {name:"Sakura 1",value:"Sakura 1"},
+            {name:"Sakura 2",value:"Sakura 2"},
+            {name:"Mawar 1",value:"Mawar 1"},
+            {name:"Mawar 2",value:"Mawar 2"},
+            {name:"Mawar 3",value:"Mawar 3"}
+        ]
+    })
+    var customInput = new AddInput({name:"title",isMandatory:true,value:"Kondisi Alat",title:"Title",childs:[]})
+    var obj = [];
+    obj.push({jumlah:1,nama:"Dacin",kondisi:"Baik"});
+    obj.push({jumlah:1,nama:"Timbangan bayi",kondisi:"Baik"});
+    obj.push({jumlah:1,nama:"Timbangan berdiri",kondisi:"Baik"});
+    obj.push({jumlah:1,nama:"Meteran/ANTROPOMETRI",kondisi:"Baik"});
+    for(var i = 0; i < obj.length ; i++){
+        var custom = new CustomInput({
+            name: "test",
+            isMandatory: true,
+            childs: [],
+            title: "Test Field"
+        },12);
+        custom.addChild(new Input({name:"nama[]",isMandatory:true,value:obj[i].nama,placeholder:"Nama Alat",title:"Nama Alat"},5))
+        custom.addChild(new Input({name:"jml[]",isMandatory:true,value:obj[i].jumlah,placeholder:"Jumlah",title:"Jumlah"},3))
+        custom.addChild(new Dropdown({name:"kondisi[]",isMandatory:true,value:obj[i].kondisi,placeholder:"Kondis",title:"Kondisi",options:[
+            {name:'Baik',value:'Baik'},
+            {name:'Sedang',value:'Sedang'},
+            {name:'Rusak',value:'Rusak'},
+            {name:'Hilang',value:'Hilang'},
+        ]},4))
+        customInput.addChild(custom)
+    }
+    form.addAddInput(customInput)
+    // FormInputter.insert(form)
+    res.send(form.generateForm(false));
+})
+app.get('/preview/gizi',(req,res) => {
+    var form = new Form({forms:[],title:"Form Gizi",id:2})
+    form.addInputForm({name:"desa",isMandatory:true,value:"Hegarmanah",placeholder:"Desa",title:"Desa"})
+    form.addInputForm({name:"rt",isMandatory:true,placeholder:"RT",title:"RT"})
+    form.addInputForm({name:"rw",isMandatory:true,placeholder:"RW",title:"RW"})
+    form.addDropdownForm({
+        name:"team",
+        isMandatory:true,
+        placeholder:"Posyandu",
+        title:"Posyandu",
+        options:[
+            {name:"Flamboyan 1",value:"Flamboyan 1"},
+            {name:"Flamboyan 2",value:"Flamboyan 2"},
+            {name:"Kenanga",value:"Kenanga"},
+            {name:"Anggrek 1",value:"Anggrek 1"},
+            {name:"Anggrek 2",value:"Anggrek 2"},
+            {name:"Anggrek 3",value:"Anggrek 3"},
+            {name:"Anyelir ",value:"Anyelir "},
+            {name:"Nusa Indah ",value:"Nusa Indah "},
+            {name:"Sedap Malam ",value:"Sedap Malam "},
+            {name:"Mawar",value:"Mawar"},
+            {name:"Dahlia 1",value:"Dahlia 1"},
+            {name:"Dahlia 2",value:"Dahlia 2"},
+            {name:"Melati 1",value:"Melati 1"},
+            {name:"Melati 2",value:"Melati 2"},
+            {name:"Sakura 1",value:"Sakura 1"},
+            {name:"Sakura 2",value:"Sakura 2"},
+            {name:"Mawar 1",value:"Mawar 1"},
+            {name:"Mawar 2",value:"Mawar 2"},
+            {name:"Mawar 3",value:"Mawar 3"}
+        ]
+    })
+    var customInput = new AddInput({name:"title",isMandatory:true,value:"Kondisi Alat",title:"Title",childs:[]})
+    var obj = [];
+    obj.push({keterangan:"KIA" ,jumlah: "93%"})
+    obj.push({keterangan:"Gizi (D/S)" ,jumlah: "25%"})
+    obj.push({keterangan:"Imunisasi" ,jumlah: "90.1%"})
+    obj.push({keterangan:"KB" ,jumlah: "75.2%"})
+
+    for(var i = 0; i < obj.length ; i++){
+        var custom = new CustomInput({
+            name: "test",
+            isMandatory: true,
+            childs: [],
+            title: "Title"
+        },12);
+        custom.addChild(new Input({name:"keterangan[]",isMandatory:true,value:obj[i].keterangan,placeholder:"Keterangan",title:"Keterangan"},6))
+        custom.addChild(new Input({name:"jml[]",isMandatory:true,value:obj[i].jumlah,placeholder:"Jumlah",title:"Jumlah"},6))
+        customInput.addChild(custom)
+    }
+    form.addAddInput(customInput)
+    // FormInputter.insert(form)
     res.send(form.generateForm(false));
 })
