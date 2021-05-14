@@ -5,8 +5,8 @@ import dotenv from 'dotenv';
 import multer from 'multer'
 import { getBooks } from './db.js'
 import atob from 'atob'
-import {FormInputter,ParticipantInputter} from './Inputter.js'
-import {customInput,AddInput,RadioButton,Dropdown,Input,BasicInput,Form} from './Form.js'
+import { FormInputter, ParticipantInputter } from './Inputter.js'
+import { customInput, AddInput, RadioButton, Dropdown, Input, BasicInput, Form } from './Form.js'
 import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
 import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
 import {
@@ -14,7 +14,8 @@ import {
     getDetailLaporanById, getAllLaporanWithDeskripsi, updateCatatanLaporan
 } from './laporan.js'
 import { getAllDeskripsiSingkat } from './deskripsi_singkat.js'
-import {get_all_history_laporan} from './user_laporan.js'
+import { get_all_history_laporan } from './user_laporan.js'
+import { deleteAllLaporanData } from './delete.js'
 
 import cors from 'cors'
 dotenv.config()
@@ -83,7 +84,7 @@ const authenticateJWT = (req, res, next) => {
 
 
 app.use(function (request, response, next) {
-    
+
     response.header("Access-Control-Allow-Origin", "*");
     response.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
@@ -95,7 +96,7 @@ app.listen( process.env.PORT , () => {
     console.log("Server running on port  !");
 });
 
-// // for local testing 
+// for local testing 
 // app.listen(5000, () => {
 //     console.log("Server running on port 5000 !");
 // });
@@ -205,7 +206,7 @@ app.get('/credential', (req, res) => {
 
 // get all users 
 app.get('/users', (req, res) => {
-    const searchQuery = req.query.searchQuery ; 
+    const searchQuery = req.query.searchQuery;
     getAllUsers(searchQuery).then((result) => {
 
         res.json({
@@ -500,11 +501,11 @@ app.post('/assign_laporan_to_user', (req, res) => {
 
 // get all laporan 
 app.get('/get_all_laporan', (req, res) => {
-    const searchQuery = req.query.searchQuery ; 
+    const searchQuery = req.query.searchQuery;
     const id_status = req.query.id_status;
 
     console.log(`idstatus ${id_status}`)
-    getAllLaporan(searchQuery,id_status).then((result) => {
+    getAllLaporan(searchQuery, id_status).then((result) => {
         res.json({
             statuscode: 200,
             data: result
@@ -566,6 +567,9 @@ app.post('/submit_laporan', (req, res) => {
     const alamat = req.body.alamat
     const nama_terlapor = req.body.nama_terlapor
     const id_user = req.body.id_user
+    const phone_number = req.body.phone_number
+
+    console.log(phone_number)
 
     let missingParamArr = []
 
@@ -576,7 +580,7 @@ app.post('/submit_laporan', (req, res) => {
     if (!alamat) missingParamArr.push("alamat")
     if (!nama_terlapor) missingParamArr.push("nama_terlapor")
     if (!id_user) missingParamArr.push("id_user")
-
+    if (!phone_number) missingParamArr.push("phone_number")
 
     let errMissingParamMessage = 'Param : '
     if (missingParamArr.length > 0) {
@@ -622,7 +626,7 @@ app.post('/submit_laporan', (req, res) => {
 
     }
 
-    submitLaporan(arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitude, catatan, alamat, nama_terlapor, id_user).then((submitResult) => {
+    submitLaporan(arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitude, catatan, alamat, nama_terlapor, id_user, phone_number).then((submitResult) => {
         res.json({
             statuscode: 200,
             message: submitResult
@@ -666,7 +670,7 @@ app.get('/get_laporan_detail_by_id', (req, res) => {
 
 app.get('/get_all_laporan_with_deskripsi', (req, res) => {
 
-    const searchQuery = req.query.searchQuery; 
+    const searchQuery = req.query.searchQuery;
 
 
 
@@ -711,15 +715,15 @@ app.put('/update_catatan_laporan', (req, res) => {
             message: message
         })
     } else {
-        updateCatatanLaporan(id_laporan , catatan).then((updateResult)=>{
+        updateCatatanLaporan(id_laporan, catatan).then((updateResult) => {
             res.json({
-                statuscode : 200, 
-                message : updateResult
+                statuscode: 200,
+                message: updateResult
             })
-        }).catch((errUpdate)=>{
+        }).catch((errUpdate) => {
             res.status(422).json({
-                statuscode : 422 , 
-                message : errUpdate
+                statuscode: 422,
+                message: errUpdate
             })
         })
     }
@@ -727,47 +731,64 @@ app.put('/update_catatan_laporan', (req, res) => {
 })
 
 
-app.get('/get_all_history_laporan' , (req,res)=>{
-    get_all_history_laporan().then((resultData)=>{
+app.get('/get_all_history_laporan', (req, res) => {
+    get_all_history_laporan().then((resultData) => {
         res.json({
-            statuscode : 200,
-            data : resultData
+            statuscode: 200,
+            data: resultData
         })
-    }).catch((err)=>{
+    }).catch((err) => {
         res.status(422).json({
-            statuscode : 422 , 
-            message : 'Error, handling in development'
+            statuscode: 422,
+            message: 'Error, handling in development'
         })
     })
 })
-function parseJwt (token) {
+
+app.get('/delete_laporan', (req, res) => {
+
+    deleteAllLaporanData().then((result) => {
+        res.json({
+            statuscode: 200,
+            message: result
+
+        })
+    }).catch((err) => {
+        res.status(422).json({
+            statuscode: 422,
+            message: err
+        })
+    })
+})
+
+function parseJwt(token) {
     var base64Url = token.split('.')[1];
     var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
 
     return JSON.parse(jsonPayload);
 };
-function getUserID (req){
+function getUserID(req) {
     var payload = parseJwt(req.headers.authorization)
     console.log(payload.id);
     return payload.id;
 }
 
-app.get('/test',authenticateJWT,async(req,res) => {
+app.get('/test', authenticateJWT, async (req, res) => {
     getUserID(req)
     generateForm();
     res.send("OK!");
 })
 
-app.get('/form',authenticateJWT, async(req,res) => {
-    FormInputter.get().then((rest)=>{
+app.get('/form', authenticateJWT, async (req, res) => {
+    FormInputter.get().then((rest) => {
         var links = [];
-        for(var i = 0 ; i < rest.length ; i++){
+        for (var i = 0; i < rest.length; i++) {
             links.push({
-                link:`${process.env.LOCAL_HOST}/form/${rest[i].id}`,
-                title:rest[i].title
+                link: `${process.env.LOCAL_HOST}/form/${rest[i].id}`,
+                title: rest[i].title
             })
         }
         res.json({
@@ -776,64 +797,64 @@ app.get('/form',authenticateJWT, async(req,res) => {
         })
     })
 })
-app.get('/form/:id', async(req,res) => {
+app.get('/form/:id', async (req, res) => {
     var id = req.params.id
     Form.getForm(id).then((form) => {
         res.send(form.generateForm(false))
     })
 })
 
-app.get('/see-form/:id',authenticateJWT,async (req,res) => {
+app.get('/see-form/:id', authenticateJWT, async (req, res) => {
     id = req.params.id
     var form = await Form.getForm(id)
     res.send(form.generateForm(true))
 })
 
-app.get('/getSubmitted',authenticateJWT, async (req,res) => {
+app.get('/getSubmitted', authenticateJWT, async (req, res) => {
     let id = getUserID();
-    var html = await Form.getUserForm({id})
+    var html = await Form.getUserForm({ id })
     res.send(html.generateForm(true))
 })
-app.get('/generateForm',(req,res) => {
+app.get('/generateForm', (req, res) => {
     generateForm()
     res.send("success!");
 })
-app.post('/submit-form/:formId',authenticateJWT,(req,res) => {
+app.post('/submit-form/:formId', authenticateJWT, (req, res) => {
     var user_id = getUserID()
     var form_id = req.params.formId;
-    ParticipantInputter.insert({user_id,form_id,answer:req.body})
+    ParticipantInputter.insert({ user_id, form_id, answer: req.body })
     res.send(JSON.stringify(req.body));
 })
-function generateForm(){
-    var form = new Form({forms:[],title:"Test Form"})
-    form.addInputForm({name:"name1",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastname1",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addDropdownForm({title:"Name",name:"name2",isMandatory:false,value:"Marimas",options:[{name:"Bambang",value:"Bambang"},{name:"Marimas",value:"Marimas"}]})
-    form.addInputForm({name:"lastname2",isMandatory:false,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"name3",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastname3",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam4",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam4",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam5",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam5",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam6",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam6",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+function generateForm() {
+    var form = new Form({ forms: [], title: "Test Form" })
+    form.addInputForm({ name: "name1", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastname1", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addDropdownForm({ title: "Name", name: "name2", isMandatory: false, value: "Marimas", options: [{ name: "Bambang", value: "Bambang" }, { name: "Marimas", value: "Marimas" }] })
+    form.addInputForm({ name: "lastname2", isMandatory: false, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addInputForm({ name: "name3", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastname3", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addInputForm({ name: "nam4", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastnam4", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addInputForm({ name: "nam5", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastnam5", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addInputForm({ name: "nam6", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastnam6", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
     FormInputter.insert(form)
 }
-app.get('/preview',(req,res) => {
-    var form = new Form({forms:[],title:"Test Form"})
-    form.addInputForm({name:"name1",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastname[]",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addDropdownForm({title:"Name",name:"name2",isMandatory:false,value:"Marimas",options:[{name:"Bambang",value:"Bambang"},{name:"Marimas",value:"Marimas"}]})
-    form.addInputForm({name:"lastname[]",isMandatory:false,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"name3",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastname[]",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam4",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam4",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam5",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam5",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
-    form.addInputForm({name:"nam6",isMandatory:true,value:"Marimas",placeholder:"name",title:"Name"})
-    form.addInputForm({name:"lastnam6",isMandatory:true,value:"Romano",placeholder:"lastname",title:"Last Name"})
+app.get('/preview', (req, res) => {
+    var form = new Form({ forms: [], title: "Test Form" })
+    form.addInputForm({ name: "name1", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastname[]", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addDropdownForm({ title: "Name", name: "name2", isMandatory: false, value: "Marimas", options: [{ name: "Bambang", value: "Bambang" }, { name: "Marimas", value: "Marimas" }] })
+    form.addInputForm({ name: "lastname[]", isMandatory: false, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addInputForm({ name: "name3", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastname[]", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addInputForm({ name: "nam4", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastnam4", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addInputForm({ name: "nam5", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastnam5", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
+    form.addInputForm({ name: "nam6", isMandatory: true, value: "Marimas", placeholder: "name", title: "Name" })
+    form.addInputForm({ name: "lastnam6", isMandatory: true, value: "Romano", placeholder: "lastname", title: "Last Name" })
     console.log(req.headers)
     res.send(form.generateForm(false));
 })

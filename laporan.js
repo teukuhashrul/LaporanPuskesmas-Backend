@@ -16,10 +16,10 @@ import { insert_user_laporan } from './user_laporan.js'
  * @param {number} id_status 
  * @returns 
  */
-let insertLaporan = (catatan, alamat, latitude, longitude, nama_terlapor, id_status) => {
+let insertLaporan = (catatan, alamat, latitude, longitude, nama_terlapor, id_status , phone_number) => {
     let query = `INSERT INTO public.laporan
-    (waktu_dilaporkan , catatan, alamat, latitude, longitude,  nama_terlapor, id_status)
-    VALUES(NOW() ,'${catatan}' ,'${alamat}', ${latitude}, ${longitude}, '${nama_terlapor}', ${id_status});`
+    (waktu_dilaporkan , catatan, alamat, latitude, longitude,  nama_terlapor, id_status , phone_number)
+    VALUES(NOW() ,'${catatan}' ,'${alamat}', ${latitude}, ${longitude}, '${nama_terlapor}', ${id_status}, ${phone_number});`
 
 
     return new Promise(function (resolve, reject) {
@@ -197,7 +197,7 @@ let getAllLaporanAssignedToUser = (id_status, id_user) => {
  *     catatan 
  * 
  */
-let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitude, catatan, alamat, nama_terlapor, id_user) => {
+let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitude, catatan, alamat, nama_terlapor, id_user, phone_number) => {
     latitude = parseFloat(parseFloat(latitude).toFixed(6))
     longitude = parseFloat(parseFloat(longitude).toFixed(8))
 
@@ -225,7 +225,7 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitu
 
 
         // 1 Insert Data 
-        insertLaporan(catatan, alamat, latitude, longitude, nama_terlapor, 1).then((result) => {
+        insertLaporan(catatan, alamat, latitude, longitude, nama_terlapor, 1,phone_number).then((result) => {
             // Get Current Data
             let getQuery = `select * from public.laporan where alamat like '${alamat}' and nama_terlapor like '${nama_terlapor}'`
             // 2.get data
@@ -392,8 +392,6 @@ let updateCatatanLaporan = (id_laporan, newCatatan) => {
         })
     })
 }
-
-
 
 
 export {
