@@ -227,7 +227,7 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitu
         // 1 Insert Data 
         insertLaporan(catatan, alamat, latitude, longitude, nama_terlapor, 1,phone_number).then((result) => {
             // Get Current Data
-            let getQuery = `select * from public.laporan where alamat like '${alamat}' and nama_terlapor like '${nama_terlapor}'`
+            let getQuery = `select * from public.laporan where alamat like '${alamat}' and nama_terlapor like '${nama_terlapor}' order by id DESC`
             // 2.get data
             db.query(getQuery).then((getResult) => {
                 let id_laporan = getResult.rows[0].id
