@@ -19,7 +19,7 @@ import { insert_user_laporan } from './user_laporan.js'
 let insertLaporan = (catatan, alamat, latitude, longitude, nama_terlapor, id_status , phone_number) => {
     let query = `INSERT INTO public.laporan
     (waktu_dilaporkan , catatan, alamat, latitude, longitude,  nama_terlapor, id_status , phone_number)
-    VALUES(NOW() ,'${catatan}' ,'${alamat}', ${latitude}, ${longitude}, '${nama_terlapor}', ${id_status}, ${phone_number});`
+    VALUES(NOW() ,'${catatan}' ,'${alamat}', ${latitude}, ${longitude}, '${nama_terlapor}', ${id_status}, '${phone_number}');`
 
 
     return new Promise(function (resolve, reject) {

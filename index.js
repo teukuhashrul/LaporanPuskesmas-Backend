@@ -16,6 +16,7 @@ import {
 import { getAllDeskripsiSingkat } from './deskripsi_singkat.js'
 import { get_all_history_laporan } from './user_laporan.js'
 import { deleteAllLaporanData } from './delete.js'
+import {removeDuplicateFromArrayNumber} from './utils.js'
 
 import cors from 'cors'
 dotenv.config()
@@ -625,6 +626,8 @@ app.post('/submit_laporan', (req, res) => {
         arr_of_deskripsi_singkat_id = [temp]
 
     }
+
+    arr_of_deskripsi_singkat_id = removeDuplicateFromArrayNumber(arr_of_deskripsi_singkat_id)
 
     submitLaporan(arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitude, catatan, alamat, nama_terlapor, id_user, phone_number).then((submitResult) => {
         res.json({
