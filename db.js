@@ -11,7 +11,7 @@ dotenv.config()
 //     password: process.env.PASSWORD,
 //     port: process.env.PORT,
 //     ssl: { rejectUnauthorized: false }
-// })
+// })   
 
 // USE THIS FOR REMOTE CONNECTION IN HOSTING / deploy phase in heroku
 const connectionString = process.env.DATABASE_URI

@@ -278,7 +278,7 @@ let getDetailLaporanById = (id_laporan) => {
             if (laporanResult.rows.length > 0) {
                 let thisLaporan = laporanResult.rows[0];
 
-                let getFotoLaporanQuery = `select id,image from public."foto_laporan" where id_laporan=${id_laporan}`
+                let getFotoLaporanQuery = `select id, encode(foto_laporan.image , 'escape') as image from public."foto_laporan" where id_laporan=${id_laporan}`
                 db.query(getFotoLaporanQuery).then((getFotoResult) => {
                     let arr_of_foto = getFotoResult.rows;
 
@@ -301,6 +301,7 @@ let getDetailLaporanById = (id_laporan) => {
                             let arr_of_jenis_pelapor = userResult.rows
                             thisLaporan.arr_of_jenis_pelapor = arr_of_jenis_pelapor
 
+                            console.log(thisLaporan)
                             resolve(thisLaporan)
                         }).catch((errorGetUser) => {
                             console.log(errorGetUser)
