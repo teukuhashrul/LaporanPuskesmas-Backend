@@ -281,12 +281,11 @@ app.delete('/user', (req, res) => {
 // create pencatatan 
 app.post('/createpencatatan', (req, res) => {
 
-    const user_id = req.body.user_id
     const form = req.body.form
 
 
-    if (user_id && form) {
-        createPencatatan(user_id, form).then((result) => {
+    if (form) {
+        createPencatatan( form).then((result) => {
             res.json({
                 statuscode: 200,
                 message: result
@@ -299,15 +298,7 @@ app.post('/createpencatatan', (req, res) => {
         })
 
     } else {
-        let errorMessage = ''
-        if (!user_id && !form) {
-            errorMessage = 'User id and form data is missing from the body param, please provide a valid body param'
-        } else if (!user_id) {
-            errorMessage = 'User id is missing from the body param, please provide a valid body param'
-        } else {
-            errorMessage = 'form data is missing from the body param, please provide a valid body param'
-        }
-
+        let errorMessage = 'form data is missing from the body param, please provide a valid body param'    
         res.status(406).json({
             statuscode: 406,
             message: errorMessage

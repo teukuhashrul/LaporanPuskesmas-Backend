@@ -5,19 +5,19 @@ import { db } from './db.js'
  * @param {number} user_id 
  * @param {string} form 
  */
-let createPencatatan = (user_id, form) => {
-    let query = `insert into pencatatan (date, form , user_id) values (NOW(), '${form}' , ${user_id} )`
+let createPencatatan = (form) => {
+    let query = `insert into pencatatan (form, tanggal) values ('${form}' ,NOW()  )`
     return new Promise(function (resolve, reject) {
         db.query(query).then((result) => {
             console.log(result)
             if (result.rowCount > 0) {
-                resolve(`Successfully Create Laporan Pencatatan from user id : ${user_id} `)
+                resolve(`Successfully Create Laporan Pencatatan  `)
             }
         }).catch((err) => {
-            if (err.code === '23503') {
-                reject(`There is no user id ${user_id}, please provide a valid user id `)
-            } else if (err.code === '22P02') {
+            if (err.code === '22P02') {
                 reject('Invalid json format, please provide a valid json string data')
+            }else{
+                reject('Error not handled, please contact db administrator ')
             }
         })
     })
@@ -55,7 +55,7 @@ let getPencatatanById = (id) => {
 
             if (result.rows.length > 0) {
                 resolve(result.rows[0])
-            }else{
+            } else {
                 reject(`there is no pencatatan data where id = ${id}`)
             }
         }).catch((err) => {
