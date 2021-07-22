@@ -16,7 +16,8 @@ import {
 import { getAllDeskripsiSingkat } from './deskripsi_singkat.js'
 import { get_all_history_laporan } from './user_laporan.js'
 import { deleteAllLaporanData } from './delete.js'
-import {removeDuplicateFromArrayNumber} from './utils.js'
+import { removeDuplicateFromArrayNumber } from './utils.js'
+import { getAllPuskesmas, insertPuskesmas } from './puskesmas.js'
 
 import cors from 'cors'
 dotenv.config()
@@ -29,8 +30,11 @@ var app = express();
 
 
 app.use(cors())
-app.use(bodyParser.json({limit : '50mb'}));
-app.use(bodyParser.urlencoded({ extended: false , limit : '50mb'}));
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: false, limit: '50mb' }));
+
+
+
 
 // required lib for receving data and save it to local temp 
 var storage = multer.diskStorage({
@@ -93,16 +97,19 @@ app.use(function (request, response, next) {
 });
 
 
-// for production
+// ------------------------------------------------------------------------------
+
+// FOR PRODUCTION TESTING
 app.listen( process.env.PORT , () => {
     console.log("Server running on port  !");
 });
 
-// for local testing 
+// FOR LOCAL TESTING
 // app.listen(5000, () => {
 //     console.log("Server running on port 5000 !");
 // });
 
+//--------------------------------------------------------------------------------------
 
 app.get('/', (req, res) => {
     res.send({ "message": "welcome to puskesmas mantap anjay mabar" })
@@ -285,7 +292,7 @@ app.post('/createpencatatan', (req, res) => {
 
 
     if (form) {
-        createPencatatan( form).then((result) => {
+        createPencatatan(form).then((result) => {
             res.json({
                 statuscode: 200,
                 message: result
@@ -298,7 +305,7 @@ app.post('/createpencatatan', (req, res) => {
         })
 
     } else {
-        let errorMessage = 'form data is missing from the body param, please provide a valid body param'    
+        let errorMessage = 'form data is missing from the body param, please provide a valid body param'
         res.status(406).json({
             statuscode: 406,
             message: errorMessage
@@ -562,7 +569,6 @@ app.post('/submit_laporan', (req, res) => {
     const id_user = req.body.id_user
     const phone_number = req.body.phone_number
 
-    console.log(phone_number)
 
     let missingParamArr = []
 
@@ -752,6 +758,63 @@ app.get('/delete_laporan', (req, res) => {
         res.status(422).json({
             statuscode: 422,
             message: err
+        })
+    })
+})
+
+
+app.get('/get_all_puskesmas', (req, res) => {
+    getAllPuskesmas().then((result) => {
+        res.json({
+            statuscode: 200,
+            data: result
+        })
+    }).catch((err) => {
+        res.json({
+            statuscode: 422,
+            message: 'error getting data, contact administrator'
+        })
+    })
+})
+
+app.post('/create_puskesmas', (req, res) => {
+    let nama_puskesmas = req.body.nama_puskesmas
+    let alamat = req.body.alamat
+
+    let isCompleted = true
+    let missingParam = ' is missing from body param, please provide a valid parameter '
+    if (!nama_puskesmas && !alamat) {
+        missingParam = 'nama_puskesmas, alamat  ' + missingParam
+        isCompleted = false
+    }
+    else if (!nama_puskesmas) {
+        missingParam = 'nama_puskesmas ' + missingParam
+        isCompleted = false
+    }
+    else if(!alamat){
+        missingParam = 'alamat ' + missingParam
+        isCompleted = false
+    }
+
+    if(!isCompleted){
+        res.status(422).json({
+            statuscode : 422, 
+            message : missingParam
+        })
+
+        return
+    }
+
+    insertPuskesmas(nama_puskesmas, alamat).then((result) => {
+        res.json({
+            statuscode : 200,
+            message : result
+        })
+    }).catch((err) => {
+        res.status(406).json({
+            statuscode: 406,
+            message   : 'error inserting puskesmas, please contact administrator'
+
         })
     })
 })
