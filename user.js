@@ -1,4 +1,4 @@
-import {db} from './db.js'
+import { db } from './db.js'
 
 
 /**
@@ -9,7 +9,7 @@ import {db} from './db.js'
 let getAllUsers = (searchQuery) => {
     let query = `select id , username, nama , id_puskesmas from public."user" where enabled = true `
 
-    if(searchQuery) query += ` and lower(nama)  like lower('%${searchQuery}%') `
+    if (searchQuery) query += ` and lower(nama)  like lower('%${searchQuery}%') `
     return new Promise(function (resolve, reject) {
         db.query(query).then((res) => {
             resolve(res.rows)
@@ -57,8 +57,13 @@ let deleteUserById = (id) => {
 
 }
 
-
-let loginUser = (username , password)=>{
+/**
+ * 
+ * @param {text} username 
+ * @param {text} password 
+ * @returns 
+ */
+let loginUser = (username, password) => {
     let query = `select id,username from public."user" where username='${username}' and password=MD5('${password}')`
 
     return new Promise(function (resolve, reject) {
@@ -70,5 +75,37 @@ let loginUser = (username , password)=>{
     })
 }
 
-export { getAllUsers, getUserById ,deleteUserById, loginUser}
+/**
+ * 
+ * @param {text} username 
+ * @param {text} password 
+ * @param {text} nama 
+ * @param {number} id_puskesmas 
+ * @param {text} alamat 
+ * @param {text} phone_number 
+ * @returns message of new created user  
+ *  
+ */
+let createUser = (username, password, nama, id_puskesmas, alamat, phone_number) => {
+    let query = `insert into public.user (username, password, nama, enabled, alamat, phone_number , id_puskesmas) values ('${username}' , MD5('${password}'),
+    '${nama}' , true , '${alamat}' ,  '${phone_number}',${id_puskesmas})`
+
+    return new Promise(function (resolve, reject) {
+        db.query(query).then((result) => {
+            if (result.rowCount > 0) {
+                resolve('Successfully create new user ')
+            }
+        }).catch((err) => {
+            if (err.code == '23503') {
+                reject(`Id puskesmas is not valid. Please provide a valid id`)
+            } else {
+                reject(err)
+            }
+        })
+    })
+}
+
+
+
+export { getAllUsers, getUserById, deleteUserById, loginUser, createUser }
 

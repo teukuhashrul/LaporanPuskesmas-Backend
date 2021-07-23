@@ -7,8 +7,8 @@ import { getBooks } from './db.js'
 import atob from 'atob'
 import { FormInputter, ParticipantInputter } from './Inputter.js'
 import { customInput, AddInput, RadioButton, Dropdown, Input, BasicInput, Form } from './Form.js'
-import { getAllUsers, getUserById, deleteUserById, loginUser } from './user.js';
-import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById } from './pencatatan.js'
+import { getAllUsers, getUserById, deleteUserById, loginUser, createUser  } from './user.js';
+import { createPencatatan, deletePencatatanById, getAllPencatatan, getPencatatanById} from './pencatatan.js'
 import {
     assignLaporanToUser, getAllLaporan, getAllLaporanAssignedToUser, submitLaporan,
     getDetailLaporanById, getAllLaporanWithDeskripsi, updateCatatanLaporan
@@ -100,9 +100,11 @@ app.use(function (request, response, next) {
 // ------------------------------------------------------------------------------
 
 // FOR PRODUCTION TESTING
-app.listen( process.env.PORT , () => {
+app.listen(process.env.PORT, () => {
     console.log("Server running on port  !");
 });
+
+
 
 // FOR LOCAL TESTING
 // app.listen(5000, () => {
@@ -791,15 +793,15 @@ app.post('/create_puskesmas', (req, res) => {
         missingParam = 'nama_puskesmas ' + missingParam
         isCompleted = false
     }
-    else if(!alamat){
+    else if (!alamat) {
         missingParam = 'alamat ' + missingParam
         isCompleted = false
     }
 
-    if(!isCompleted){
+    if (!isCompleted) {
         res.status(422).json({
-            statuscode : 422, 
-            message : missingParam
+            statuscode: 422,
+            message: missingParam
         })
 
         return
@@ -807,16 +809,84 @@ app.post('/create_puskesmas', (req, res) => {
 
     insertPuskesmas(nama_puskesmas, alamat).then((result) => {
         res.json({
-            statuscode : 200,
-            message : result
+            statuscode: 200,
+            message: result
         })
     }).catch((err) => {
         res.status(406).json({
             statuscode: 406,
-            message   : 'error inserting puskesmas, please contact administrator'
+            message: 'error inserting puskesmas, please contact administrator'
 
         })
     })
+})
+
+app.post('/create_user', (req, res) => {
+
+    const username = req.body.username
+    const password = req.body.password
+    const nama = req.body.nama
+    const id_puskesmas = req.body.id_puskesmas
+    const alamat = req.body.alamat
+    const phone_number = req.body.phone_number
+
+    let missingParamArr = []
+    if (!username) missingParamArr.push("username")
+    if (!password) missingParamArr.push("password")
+    if (!nama) missingParamArr.push("nama")
+    if (!id_puskesmas) missingParamArr.push("id_puskesmas")
+    if (!alamat) missingParamArr.push("alamat")
+    if (!phone_number) missingParamArr.push("phone_number")
+
+    let errMissingParamMessage = 'Param : '
+    if (missingParamArr.length > 0) {
+        missingParamArr.map((element, index) => {
+            if (index == 0) {
+                errMissingParamMessage += ` ${element}`
+            } else {
+                errMissingParamMessage += ` ,${element} `
+
+            }
+        })
+        errMissingParamMessage += ` is missing from body param , please provide valid param`
+        res.status(406).json({
+            statuscode: 406,
+            message: errMissingParamMessage
+        })
+        return
+    }
+
+
+
+    let wrongNumVar = ""
+    if (isNaN(id_puskesmas)) wrongNumVar = 'id_puskesmas'
+
+
+    if (wrongNumVar != "") {
+        res.status(406).json({
+            statuscode: 406,
+            message: `Please send a valid number data type for ${wrongNumVar}`
+        })
+        return
+    }
+
+    createUser(username, password , nama, id_puskesmas , alamat , phone_number).then((result)=>{
+        res.json({
+            statuscode : 200,
+            message : result
+        })
+
+    }).catch((err)=>{
+        res.status(422).json({
+            statuscode : 422 , 
+            message : err
+        })
+    })
+
+
+
+
+
 })
 
 function parseJwt(token) {
