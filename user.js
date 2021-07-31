@@ -7,7 +7,10 @@ import { db } from './db.js'
  * @param {text} searchQuery
  */
 let getAllUsers = (searchQuery) => {
-    let query = `select id , username, nama , id_puskesmas from public."user" where enabled = true `
+    let query = `select public."user".id , username, nama , public."user".alamat , phone_number, id_puskesmas ,nama_puskesmas   from public."user" 
+    left outer join 
+    public."puskesmas" on public."user".id_puskesmas  = public."puskesmas".id 
+    where enabled = true  `
 
     if (searchQuery) query += ` and lower(nama)  like lower('%${searchQuery}%') `
     return new Promise(function (resolve, reject) {
