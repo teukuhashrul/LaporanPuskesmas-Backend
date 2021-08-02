@@ -94,17 +94,29 @@ let createUser = (username, password, nama, id_puskesmas, alamat, phone_number) 
     '${nama}' , true , '${alamat}' ,  '${phone_number}',${id_puskesmas})`
 
     return new Promise(function (resolve, reject) {
-        db.query(query).then((result) => {
-            if (result.rowCount > 0) {
-                resolve('Successfully create new user ')
-            }
-        }).catch((err) => {
-            if (err.code == '23503') {
-                reject(`Id puskesmas is not valid. Please provide a valid id`)
+
+        let queryCheckUser = `select * from public."user" where username like '${username}'`
+
+        db.query(queryCheckUser).then((checkResult) => {
+            if (checkResult.rows.length == 0) {
+                db.query(query).then((result) => {
+                    if (result.rowCount > 0) {
+                        resolve('Successfully create new user ')
+                    }
+                }).catch((err) => {
+                    if (err.code == '23503') {
+                        reject(`Id puskesmas is not valid. Please provide a valid id`)
+                    } else {
+                        reject(err)
+                    }
+                })
+
             } else {
-                reject(err)
+                reject('username has already been taken, please use another username')
+
             }
         })
+
     })
 }
 
