@@ -1,9 +1,9 @@
 import {db} from './db.js'
 class FormInputter{
     static table = "form"
-    static async insert({title,forms}){
-        return db.query(`INSERT INTO ${FormInputter.table} (title,forms)
-        VALUES ('${title}','${JSON.stringify(forms)}')
+    static async insert({title,forms,child}){
+        return db.query(`INSERT INTO ${FormInputter.table} (title,child,forms)
+        VALUES ('${title}',${child?child:"null"},'${JSON.stringify(forms)}')
         `,(err,resp) => {
             console.log(err)
         })
