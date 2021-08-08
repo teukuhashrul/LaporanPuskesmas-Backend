@@ -935,6 +935,7 @@ app.get('/form', authenticateJWT, async (req, res) => {
         })
     })
 })
+<<<<<<< HEAD
 function parseJwt (token) {
     var base64Url = token.split('.')[1];
     var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -948,6 +949,8 @@ function getUserID (req){
     var payload = parseJwt(req.headers.authorization)
     return payload.id;
 }
+=======
+>>>>>>> ca18eaf236e9b3918e22f7422644f0cbc4210a18
 
 app.get('/test',authenticateJWT,async(req,res) => {
     getUserID(req)
