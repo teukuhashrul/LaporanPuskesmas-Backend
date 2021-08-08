@@ -16,7 +16,7 @@ import { insert_user_laporan } from './user_laporan.js'
  * @param {number} id_status 
  * @returns 
  */
-let insertLaporan = (catatan, alamat, latitude, longitude, nama_terlapor, id_status , phone_number) => {
+let insertLaporan = (catatan, alamat, latitude, longitude, nama_terlapor, id_status, phone_number) => {
     let query = `INSERT INTO public.laporan
     (waktu_dilaporkan , catatan, alamat, latitude, longitude,  nama_terlapor, id_status , phone_number)
     VALUES(NOW() ,'${catatan}' ,'${alamat}', ${latitude}, ${longitude}, '${nama_terlapor}', ${id_status}, '${phone_number}');`
@@ -175,7 +175,20 @@ let getAllLaporanAssignedToUser = (id_status, id_user) => {
 
     return new Promise(function (resolve, reject) {
         db.query(query).then((queryResult) => {
-            resolve(queryResult.rows)
+
+            // remove duplicate from multiple user laporan 
+            let dict = {}
+            queryResult.rows.map((item) => {
+                dict[item.id_laporan] = item
+            })
+
+            let arrRes = []
+            Object.keys(dict).map((key) => {
+                arrRes.push(dict[key])
+            })
+
+            resolve(arrRes)
+
         }).catch((err) => {
             console.log(err)
             reject(err)
@@ -225,7 +238,7 @@ let submitLaporan = (arr_of_foto, arr_of_deskripsi_singkat_id, latitude, longitu
 
 
         // 1 Insert Data 
-        insertLaporan(catatan, alamat, latitude, longitude, nama_terlapor, 1,phone_number).then((result) => {
+        insertLaporan(catatan, alamat, latitude, longitude, nama_terlapor, 1, phone_number).then((result) => {
             // Get Current Data
             let getQuery = `select * from public.laporan where alamat like '${alamat}' and nama_terlapor like '${nama_terlapor}' order by id DESC`
             // 2.get data
