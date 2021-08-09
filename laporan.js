@@ -132,17 +132,32 @@ let assignLaporanToUser = (id_laporan, id_user, id_jenis_laporan) => {
  * Function to get all Laporan 
  * @param {string} searchquery  
  * @param {number} id_status 
- * 
+ * @param {number} filterAssign  
  * 
  */
-let getAllLaporan = (searchQuery, id_status) => {
+let getAllLaporan = (searchQuery, id_status, filterAssign) => {
 
-
+    
     let query = `select * from public.laporan `
 
 
     if (searchQuery) query += `where  lower(alamat) like lower('%${searchQuery}%') or lower(catatan) like lower('%${searchQuery}%') or lower(nama_terlapor) like lower('%${searchQuery}%') `
     else if (id_status) query += `where  id_status = ${id_status}`
+
+
+    query = `select * from (
+            ${query}
+        ) as lap join (
+            select id_laporan , count(id) as counter
+            from user_laporan
+            group by id_laporan
+        ) as count_assign on lap.id = count_assign.id_laporan `
+
+    if(filterAssign && filterAssign != 0){
+        query += ` where counter=${filterAssign}`
+    }
+
+
 
     return new Promise(function (resolve, reject) {
         db.query(query).then((queryResult) => {
@@ -373,10 +388,11 @@ let getDetailLaporanById = (id_laporan) => {
  * Get all laporan for web api version 
  * returns all laporan with deskripsi singkat 
  */
-let getAllLaporanWithDeskripsi = (searchQuery) => {
+let getAllLaporanWithDeskripsi = (searchQuery,filterAssign) => {
     return new Promise(function (resolve, reject) {
 
-        getAllLaporan(searchQuery).then((resultAllLaporan) => {
+        getAllLaporan(searchQuery,null,filterAssign).then((resultAllLaporan) => {
+
             let queryGetLaporanDeskripsiSingkat = `select id_laporan,id_deskripsi_singkat , deskripsi from laporan_deskripsi_singkat left outer join deskripsi_singkat on 
             laporan_deskripsi_singkat.id_deskripsi_singkat = deskripsi_singkat.id `
 
