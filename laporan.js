@@ -178,7 +178,7 @@ let getAllLaporan = (searchQuery, id_status, filterAssign) => {
  * @param {number} id_user 
  * @returns 
  */
-let getAllLaporanAssignedToUser = (id_status, id_user) => {
+let getAllLaporanAssignedToUser = (id_status, id_user , searchQuery) => {
 
 
     let query = `select public.laporan.id , waktu_dilaporkan, alamat, latitude, longitude , catatan, nama_terlapor, public.laporan.id_status,phone_number
@@ -186,7 +186,12 @@ let getAllLaporanAssignedToUser = (id_status, id_user) => {
 
 
     if (id_user && id_status) query += `where  id_user = ${id_user} and id_status=${id_status}`
-    else if (id_user) query += `where id_user = ${id_user}`
+    else if (id_user) {
+        query += `where id_user = ${id_user}`
+
+        if (searchQuery) query += `and lower(alamat) like lower('%${searchQuery}%') or lower(catatan) like lower('%${searchQuery}%') or lower(nama_terlapor) like lower('%${searchQuery}%') `
+
+    }
     else if (id_status) query += `where id_status = ${id_status}`
 
     return new Promise(function (resolve, reject) {

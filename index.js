@@ -537,10 +537,12 @@ app.get('/get_all_laporan_assigned_to_user', (req, res) => {
 
     const id_status = req.query.id_status
     const id_user = req.query.id_user
+    const searchQuery = req.query.searchQuery 
+
 
     console.log(`id_status ${id_status} id_user ${id_user}`)
 
-    getAllLaporanAssignedToUser(id_status, id_user).then((result) => {
+    getAllLaporanAssignedToUser(id_status, id_user, searchQuery).then((result) => {
         res.json({
             statuscode: 200,
             data: result
