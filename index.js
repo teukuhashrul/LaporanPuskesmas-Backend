@@ -953,7 +953,7 @@ app.get('/form',authenticateJWT, async(req,res) => {
         var links = [];
         for(var i = 0 ; i < rest.length ; i++){
             links.push({
-                link:`${process.env.LOCAL_HOST}:${process.env.LOCAL_PORT}/form/${rest[i].id}`,
+                link:`${process.env.LOCAL_HOST}/form/${rest[i].id}`,
                 title:rest[i].title
             })
         }
@@ -1068,8 +1068,8 @@ app.get('/preview',(req,res) => {
     // form.addInputForm({name:"rw1",isMandatory:true,placeholder:"RW",title:"RW",information:"*RW Information"})
     // form.addInputForm({name:"rt2",isMandatory:true,placeholder:"RT",title:"RT",information:"*RT Information"})
     // form.addInputForm({name:"rw2",isMandatory:true,placeholder:"RW",title:"RW",information:"*RW Information"})
-    FormInputter.insert(form)
-    res.send(form.generateForm(false,pagination));
+    // FormInputter.insert(form)
+    res.send(form.generateForm(false,url.parse(req.url,true).query));
 })
 app.get('/preview/keluarga',(req,res) => {
     var pagination = url.parse(req.url,true).query.pagination;
@@ -1081,14 +1081,14 @@ app.get('/preview/keluarga',(req,res) => {
     //     title:"Nomor urut kepala keluarga",
     //     information:"Beri nomor urut pada setiap kepala keluarga (secara berurutan) pada setiap rumah yang didata"
     // })
-    form.addInputForm({
-        name:"Nama kepala keluarga",
-        isMandatory:true,
-        placeholder:"Nama kepala keluarga",
-        title:"Nama kepala keluarga",
-        smallName:"Nama kepala keluarga",
-        information:"Tulis nama yang menjadi kepala keluarga (orang yang bertanggung jawab terhadap keluarga tersebut)"
-    })
+    // form.addInputForm({
+    //     name:"Nama kepala keluarga",
+    //     isMandatory:true,
+    //     placeholder:"Nama kepala keluarga",
+    //     title:"Nama kepala keluarga",
+    //     smallName:"Nama kepala keluarga",
+    //     information:"Tulis nama yang menjadi kepala keluarga (orang yang bertanggung jawab terhadap keluarga tersebut)"
+    // })
     form.addDropdownForm({
         name:"Ada ibu bersalin",
         isMandatory:true,
@@ -1280,14 +1280,14 @@ app.get('/preview/keluarga',(req,res) => {
 })
 app.get('/preview/rumah-tangga',(req,res) => {
     var pagination = url.parse(req.url,true).query.pagination;
-    var form = new Form({forms:[],title:"Form Rumah Tangga",id:1,max:5,child:48})
-    // form.addInputForm({
-    //     name:"Nomor urut rumah tangga",
-    //     placeholder:"Nomor urut rumah tangga",
-    //     title:"Nomor urut rumah tangga",
-    //     isMandatory:true,
-    //     information:"Beri nomor urut mulai dari 1 pada setiap rumah tangga yang dilakukan pendataan"
-    // })
+    var form = new Form({forms:[],title:"Form Rumah Tangga",id:1,max:5,child:49})
+    form.addInputForm({
+        name:"Nomor urut rumah tangga",
+        placeholder:"Nomor urut rumah tangga",
+        title:"Nomor urut rumah tangga",
+        isMandatory:true,
+        information:"Beri nomor urut mulai dari 1 pada setiap rumah tangga yang dilakukan pendataan"
+    })
     
     form.addDropdownForm({
         name:"Sehat",
@@ -1422,7 +1422,7 @@ app.get('/preview/rumah-tangga',(req,res) => {
         information:"Tuliskan umur WUS (10-49 tahun) yang meninggal oleh berbagai sebab dalam kurun waktu bulan Juli tahun sebelum pendataan sampai pada saat dilakukan pendataan"
     })
     // FormInputter.insert(form)
-    res.send(form.generateForm(false,{pagination}));
+    res.send(form.generateForm(false,url.parse(req.url,true).query));
 })
 app.get('/preview/gizi',(req,res) => {
     var form = new Form({forms:[],title:"Form Gizi",id:2})
