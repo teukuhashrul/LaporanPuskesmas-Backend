@@ -44,17 +44,17 @@ class Form{
         let forms = this.forms
         this.forms = []
         if(this.child){
-            var addInput = new AddInput({name:"keluarga.title",isMandatory:true,value:"Keluarga",title:"Title",smallName:"Title",childs:[],information:"*This is Custom Input"})
-            let custom = new CustomInput({
-                name: "test",
-                isMandatory: true,
-                childs: [],
-                title: "Test Field"
-            },12);
-            custom.addChild(new Input({name:"keluarga.nama[]",isMandatory:true,value:"",placeholder:"Nama Keluarga",title:"Nama Keluarga",size:8}))
-            custom.addChild(new Link({link:"/form/"+this.child+"?",size:4}))
-            addInput.addChild(custom);
-            this.forms.push(addInput)
+            // var addInput = new AddInput({name:"keluarga.title",isMandatory:true,value:"Keluarga",title:"Title",smallName:"Title",childs:[],information:"*This is Custom Input"})
+            // let custom = new CustomInput({
+            //     name: "test",
+            //     isMandatory: true,
+            //     childs: [],
+            //     title: "Test Field"
+            // },12);
+            // custom.addChild(new Input({name:"keluarga.nama[]",isMandatory:true,value:"",placeholder:"Nama Keluarga",title:"Nama Keluarga",size:8}))
+            // custom.addChild(new Link({link:"/form/"+this.child+"?",size:4}))
+            // addInput.addChild(custom);
+            // this.forms.push(addInput)
         }
         for(var i = 0 ; i < forms.length; i++){
             if(answer){
@@ -137,8 +137,8 @@ class Form{
     }
 
     generateForm(isSee,{pagination,child}){
-        var pagination = pagination?pagination:1;
         console.log(pagination,child)
+        var pagination = pagination?pagination:1;
         var data = this.getPages(pagination);
         return `
         <!doctype html>
@@ -154,10 +154,12 @@ class Form{
 
         <title>Kader Puskesmas!</title>
         <script>
+        var ct = 0;
         function add(el){
             var html = el.nextElementSibling.nextElementSibling.cloneNode(true)
             var parent = el.parentElement
             html.firstElementChild.innerHTML += '<div class="btn btn-danger" style="width:32px;height:58px;margin-top:-22px;display:inline-block" onclick=del(this)>-</div>'
+            $(html).find(".btn-primary")[0].dataset.counter=++ct
             parent.appendChild(html)
         }
         var param;
@@ -181,6 +183,19 @@ class Form{
                     console.log(dt,JSON.stringify(dt))
                 }
             }, false);
+            if(window.localStorage.getItem("newItem")){
+                let data = getData();
+                console.log(data);
+                if(!data[0].child){
+                    data[0].child = [];
+                }
+                const newItem = JSON.parse(window.localStorage.getItem("newItem"));
+                data[0].child[newItem[0].counter]=(newItem)
+                console.log(data,"new")
+                console.log(newItem[0],"new")
+                window.localStorage.removeItem("newItem");
+                window.localStorage.setItem("forms${this.id}",JSON.stringify(data))
+            }
         })
                 function getParameterByName(name) {
                     return getParam().get(name)*1
@@ -228,14 +243,18 @@ class Form{
                     return sv;
                 }
                 function closemsg(){
-                    console.log("close");
-                    window.localStorage.removeItem("forms${this.id}")
-                    var win = window.open("about:blank", "_self");
-                    win.close();
+                    console.log("back poping");
+                    // var win = window.open("about:blank", "_self");
+                    // window.localStorage.removeItem("forms${this.id}")
+                    window.history.back();
                 }
                 function savemsg(){
                     save();
-                    window.opener.postMessage({payload:getData(),command:1})
+                    var dat = getData();
+                    const params = new URLSearchParams(window.location.search);
+                    dat[0].counter = params.get('counter');
+                    window.localStorage.setItem('newItem',JSON.stringify(dat));
+                    // window.opener.postMessage({payload:getData(),command:1})
                     closemsg();
                 }
                 function load(){
@@ -337,7 +356,7 @@ class Form{
             }
         </style>
         <body style="height:100%">
-        <form action="${process.env.LOCAL_HOST}:${process.env.LOCAL_PORT}/submit-form/${this.id}" method="post" style="margin:0px !important;height:100%">
+        <form action="${process.env.LOCAL_HOST}/submit-form/${this.id}" method="post" style="margin:0px !important;height:100%">
         
         <div class="container p-4" style="background-color:#fcfcfc;height:100%">
         <h2 class="mb-4">${this.title}</h2>
@@ -485,25 +504,14 @@ class Link extends BasicInput{
 
     input(){
         return `
-            <Button name=${this.name} data-counter=0 style="width:100%;height:100%;" class="btn btn-primary" onclick="
-            let popup = window.open('${this.link}child=true&counter=0');
-            console.log(this.dataset.counter);
-            var dt = getData()[0].child;
-            if(dt && dt.length > 0){
-                popup.addEventListener('load', () => {
-                    popup.postMessage({
-                        command:2,
-                        payload: {...dt[this.dataset.counter],counter:this.dataset.counter}
-                    });
-                }, true); 
-            }else{
-                popup.addEventListener('load', () => {
-                    popup.postMessage({
-                        command:2,
-                        payload: {counter:this.dataset.counter}
-                    });
-                }, true); 
-            }
+            <Button name=${this.name} data-counter=0 style="width:100%;height:100%;" class="btn btn-primary"
+            onclick="
+                window.location.href = '${this.link}child=true&counter='+this.dataset.counter
+                console.log(this.dataset.counter);
+                var dt = getData()[0].child;
+                if(dt && dt.length > 0){
+                }else{
+                }
             "
             type='Button' class="form-control" id="${this.getIdentifier()}">Open</Button>
         `
@@ -589,7 +597,7 @@ class AddInput extends BasicInput{
     input(){
         return `
             <div class="form-floating decrease">
-                <input type='text' disabled name="${this.name}" class="form-control" id="${this.getIdentifier()}" value=${this.getValue()} }/>
+                <input type='text' disabled name="${this.name}" class="form-control" id="${this.getIdentifier()}" value=${this.getValue()} />
                 ${this.inputHeader()}
             </div>
             <div class="btn btn-success" style="width:32px;height:58px;margin-top:-22px;display:inline-block" onclick=add(this)>+</div>
