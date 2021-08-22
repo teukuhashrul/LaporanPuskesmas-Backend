@@ -653,7 +653,7 @@ class CustomInput extends BasicInput{
     outerFormRow(child){
         return `
             <div class="col-md-${child.size} col-xs-12" style="padding:0px">
-            <div class="form-floating" style="height:100%;">
+            <div class="form-floating">
                 ${child.input()}
                 ${this.info()}
             </div>
