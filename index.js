@@ -145,7 +145,9 @@ app.post('/loginuser', (req, res) => {
         loginUser(username, password).then((result) => {
             if (result.length > 0) {
                 const userData = result[0]
-                const accessToken = jwt.sign(userData, accessTokenSecret, { expiresIn: '30m' })
+                const accessToken = jwt.sign(userData, accessTokenSecret, { expiresIn: '1m' })
+
+
 
                 res.json({
                     statuscode: 200,
@@ -572,7 +574,7 @@ app.get('/get_deskripsi_singkat', (req, res) => {
 })
 
 // submit laporan
-app.post('/submit_laporan', (req, res) => {
+app.post('/submit_laporan', authenticateJWT ,(req, res) => {
     let arr_of_foto = req.body.arr_of_foto
     let arr_of_deskripsi_singkat_id = req.body.arr_of_deskripsi_singkat_id
     let longitude = req.body.longitude
