@@ -476,7 +476,7 @@ class BasicInput{
         return `
             <div class="col-md-${this.size} col-xs-12">
             ${isOpen?`<p><b>${counter}. ${this.smallName}</b></p>`:``}
-            <div class="form-floating" style="height:100%;">
+            <div class="form-floating">
                 ${inner}
             </div>
             </div>
