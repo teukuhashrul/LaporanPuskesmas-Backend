@@ -132,10 +132,10 @@ let assignLaporanToUser = (id_laporan, id_user, id_jenis_laporan) => {
  * Function to get all Laporan 
  * @param {string} searchquery  
  * @param {number} id_status 
- * 
+ * @param {number} filterAssign  
  * 
  */
-let getAllLaporan = (searchQuery, id_status) => {
+let getAllLaporan = (searchQuery, id_status, filterAssign) => {
 
 
     let query = `select * from public.laporan `
@@ -143,6 +143,21 @@ let getAllLaporan = (searchQuery, id_status) => {
 
     if (searchQuery) query += `where  lower(alamat) like lower('%${searchQuery}%') or lower(catatan) like lower('%${searchQuery}%') or lower(nama_terlapor) like lower('%${searchQuery}%') `
     else if (id_status) query += `where  id_status = ${id_status}`
+
+
+    query = `select * from (
+            ${query}
+        ) as lap join (
+            select id_laporan , count(id) as counter
+            from user_laporan
+            group by id_laporan
+        ) as count_assign on lap.id = count_assign.id_laporan `
+
+    if (filterAssign && filterAssign != 0) {
+        query += ` where counter=${filterAssign}`
+    }
+
+
 
     return new Promise(function (resolve, reject) {
         db.query(query).then((queryResult) => {
@@ -163,14 +178,22 @@ let getAllLaporan = (searchQuery, id_status) => {
  * @param {number} id_user 
  * @returns 
  */
-let getAllLaporanAssignedToUser = (id_status, id_user) => {
+let getAllLaporanAssignedToUser = (id_status, id_user, searchQuery) => {
 
 
-    let query = `select * from public.laporan  join  public.user_laporan on public.laporan.id  = public.user_laporan.id_laporan `
+    let query = `select public.laporan.id , waktu_dilaporkan, alamat, latitude, longitude , catatan, nama_terlapor, public.laporan.id_status,phone_number
+     from public.laporan  join  public.user_laporan on public.laporan.id  = public.user_laporan.id_laporan `
 
 
     if (id_user && id_status) query += `where  id_user = ${id_user} and id_status=${id_status}`
-    else if (id_user) query += `where id_user = ${id_user}`
+    else if (id_user) {
+        query += `where id_user = ${id_user}`
+
+        if (searchQuery) {
+            console.log(searchQuery)
+            query = `select * from (${query}) as tbl where lower(alamat) like lower('%${searchQuery}%') or lower(catatan) like lower('%${searchQuery}%') or lower(nama_terlapor) like lower('%${searchQuery}%') `
+        }
+    }
     else if (id_status) query += `where id_status = ${id_status}`
 
     return new Promise(function (resolve, reject) {
@@ -179,7 +202,7 @@ let getAllLaporanAssignedToUser = (id_status, id_user) => {
             // remove duplicate from multiple user laporan 
             let dict = {}
             queryResult.rows.map((item) => {
-                dict[item.id_laporan] = item
+                dict[item.id] = item
             })
 
             let arrRes = []
@@ -187,7 +210,35 @@ let getAllLaporanAssignedToUser = (id_status, id_user) => {
                 arrRes.push(dict[key])
             })
 
-            resolve(arrRes)
+
+
+            // get all deskripsi singkat
+            let queryGetLaporanDeskripsiSingkat = `select id_laporan,id_deskripsi_singkat , deskripsi from laporan_deskripsi_singkat left outer join deskripsi_singkat on 
+            laporan_deskripsi_singkat.id_deskripsi_singkat = deskripsi_singkat.id `
+
+
+            db.query(queryGetLaporanDeskripsiSingkat).then((resultGetLaporanDeskripsiSingkat) => {
+                let arr_laporan_deskripsi_singkat = resultGetLaporanDeskripsiSingkat.rows;
+
+                arrRes.forEach((item, idx) => {
+                    let currArrDeskripsiSingkat = []
+
+                    arr_laporan_deskripsi_singkat.forEach((desItem) => {
+                        if (item.id == desItem.id_laporan) {
+                            currArrDeskripsiSingkat.push(
+                                { 'id_deskripsi_singkat': desItem.id_deskripsi_singkat, 'deskripsi': desItem.deskripsi }
+                            )
+                        }
+                    })
+
+                    arrRes[idx].arr_of_deskripsi_singkat = currArrDeskripsiSingkat
+
+                })
+
+                resolve(arrRes)
+            }).catch((errorGetDeskripsiSingkat) => {
+                console.log(errorGetDeskripsiSingkat)
+            })
 
         }).catch((err) => {
             console.log(err)
@@ -344,10 +395,11 @@ let getDetailLaporanById = (id_laporan) => {
  * Get all laporan for web api version 
  * returns all laporan with deskripsi singkat 
  */
-let getAllLaporanWithDeskripsi = (searchQuery) => {
+let getAllLaporanWithDeskripsi = (searchQuery, filterAssign) => {
     return new Promise(function (resolve, reject) {
 
-        getAllLaporan(searchQuery).then((resultAllLaporan) => {
+        getAllLaporan(searchQuery, null, filterAssign).then((resultAllLaporan) => {
+
             let queryGetLaporanDeskripsiSingkat = `select id_laporan,id_deskripsi_singkat , deskripsi from laporan_deskripsi_singkat left outer join deskripsi_singkat on 
             laporan_deskripsi_singkat.id_deskripsi_singkat = deskripsi_singkat.id `
 

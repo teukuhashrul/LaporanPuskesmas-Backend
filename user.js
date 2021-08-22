@@ -97,6 +97,7 @@ let createUser = (username, password, nama, id_puskesmas, alamat, phone_number) 
 
         let queryCheckUser = `select * from public."user" where username like '${username}'`
 
+        console.log(queryCheckUser)
         db.query(queryCheckUser).then((checkResult) => {
             if (checkResult.rows.length == 0) {
                 db.query(query).then((result) => {

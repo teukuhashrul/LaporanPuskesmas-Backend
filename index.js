@@ -515,9 +515,9 @@ app.post('/assign_laporan_to_user', (req, res) => {
 app.get('/get_all_laporan', (req, res) => {
     const searchQuery = req.query.searchQuery;
     const id_status = req.query.id_status;
+    const filterAssign = req.query.filterAssign
 
-    console.log(`idstatus ${id_status}`)
-    getAllLaporan(searchQuery, id_status).then((result) => {
+    getAllLaporan(searchQuery, id_status, filterAssign).then((result) => {
         res.json({
             statuscode: 200,
             data: result
@@ -537,10 +537,12 @@ app.get('/get_all_laporan_assigned_to_user', (req, res) => {
 
     const id_status = req.query.id_status
     const id_user = req.query.id_user
+    const searchQuery = req.query.searchQuery 
+
 
     console.log(`id_status ${id_status} id_user ${id_user}`)
 
-    getAllLaporanAssignedToUser(id_status, id_user).then((result) => {
+    getAllLaporanAssignedToUser(id_status, id_user, searchQuery).then((result) => {
         res.json({
             statuscode: 200,
             data: result
@@ -684,10 +686,9 @@ app.get('/get_laporan_detail_by_id', (req, res) => {
 app.get('/get_all_laporan_with_deskripsi', (req, res) => {
 
     const searchQuery = req.query.searchQuery;
+    const filterAssign = req.query.filterAssign
 
-
-
-    getAllLaporanWithDeskripsi(searchQuery).then((resultLaporan) => {
+    getAllLaporanWithDeskripsi(searchQuery,filterAssign).then((resultLaporan) => {
         res.json({
             statuscode: 200,
             data: resultLaporan
