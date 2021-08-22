@@ -163,10 +163,10 @@ class Form{
             parent.appendChild(html)
         }
         var param;
-        $( document ).ready(function() {
-            window.localStorage.removeItem("forms${this.id}")
-            save();
-            load();
+        var freshOpen = true;
+        var formID = ${this.id};
+        $( document ).ready(function() {            
+            getData();
             window.addEventListener("message", (event) => {
                 if(event.data.command == 1){
                     let data = getData();
@@ -196,6 +196,10 @@ class Form{
                 window.localStorage.removeItem("newItem");
                 window.localStorage.setItem("forms${this.id}",JSON.stringify(data))
             }
+            if(!getData()){
+                save();
+            }
+            load();
         })
                 function getParameterByName(name) {
                     return getParam().get(name)*1
@@ -220,7 +224,14 @@ class Form{
                     window.location.href = window.location.href.split('?')[0]+"?"+getParam().toString();
                 }
                 function getData(){
-                    var data = JSON.parse(window.localStorage.getItem("forms${this.id}"));
+                    var data;
+                    if(getParameterByName("parent") && !JSON.parse(window.localStorage.getItem("forms"+formID))){
+                        let d = JSON.parse(window.localStorage.getItem("forms"+getParameterByName("parent")))
+                        if(d[0].child){
+                            data = d[0].child[getParameterByName("counter")]
+                        }
+                    }
+                    data = data?data:JSON.parse(window.localStorage.getItem("forms"+formID));
                     return data;
                 }
                 function save(){
@@ -245,7 +256,7 @@ class Form{
                 function closemsg(){
                     console.log("back poping");
                     // var win = window.open("about:blank", "_self");
-                    // window.localStorage.removeItem("forms${this.id}")
+                    window.localStorage.removeItem("forms${this.id}")
                     window.history.back();
                 }
                 function savemsg(){
@@ -258,7 +269,8 @@ class Form{
                     closemsg();
                 }
                 function load(){
-                    let idx = getParameterByName('pagination')-1;
+                    let pag = getParameterByName('pagination');
+                    let idx = pag?pag-1:0;
                     let data = getData();
                     if(!data) return;
                     data = data[idx];
@@ -285,7 +297,13 @@ class Form{
                     }
                 }
                 function del(el){
+                    let counter = $(el.parentElement).find(".btn-primary")[0].dataset.counter
+                    var obj  = getData()
+                    delete obj[0].child[counter];
+                    console.log(obj[0].child,counter);
+                    window.localStorage.setItem("forms${this.id}",JSON.stringify(obj))
                     el.parentElement.parentElement.remove()
+                    save();
                 }
                 function getPair(){
                 var form = document.getElementsByTagName("form");
@@ -346,6 +364,7 @@ class Form{
                 }
                 dt = flat(dt);
                 var formdata = ({url:$(form).attr('action'),data:dt,formId:${this.id}});
+                window.localStorage.removeItem("forms${this.id}")
                 return formdata;
             }
             </script>
@@ -506,12 +525,10 @@ class Link extends BasicInput{
         return `
             <Button name=${this.name} data-counter=0 style="width:100%;height:100%;" class="btn btn-primary"
             onclick="
-                window.location.href = '${this.link}child=true&counter='+this.dataset.counter
+                save()
+                window.location.href = '${this.link}child=true&counter='+this.dataset.counter+'&parent='+formID
                 console.log(this.dataset.counter);
                 var dt = getData()[0].child;
-                if(dt && dt.length > 0){
-                }else{
-                }
             "
             type='Button' class="form-control" id="${this.getIdentifier()}">Open</Button>
         `
