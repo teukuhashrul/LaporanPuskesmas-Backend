@@ -145,7 +145,7 @@ app.post('/loginuser', (req, res) => {
         loginUser(username, password).then((result) => {
             if (result.length > 0) {
                 const userData = result[0]
-                const accessToken = jwt.sign(userData, accessTokenSecret, { expiresIn: '60m' })
+                const accessToken = jwt.sign(userData, accessTokenSecret, { expiresIn: '5m' })
 
 
 
